@@ -1,0 +1,1046 @@
+<!doctype html>
+
+<!--
+  「劍是兇器
+  「劍術是殺人術
+  「無論用多麼華麗的詞藻來掩飾
+  「這始終是事實」
+-->
+
+<html lang="zh" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- set color -->
+<meta name="theme-color" content="#24292e" />
+
+<style>
+  .in_memories {
+    filter: grayscale(1) !important;
+  }
+</style>
+
+<script src="https://yunlingz.github.io/assets/js/addons/jquery-3.6.1.min.js"></script>
+<script src="https://yunlingz.github.io/assets/js/addons/init.js"></script>
+
+<!-- fonts -->
+<style>
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Italic.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Italic.woff") format("woff");
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Bold.woff2") format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Bold.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-BoldItalic.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-BoldItalic.woff")
+      format("woff");
+  font-weight: bold;
+  font-style: italic;
+  font-display: swap;
+}
+
+* {
+  font-variant-ligatures: none;
+}
+
+</style>
+
+<!-- begin _includes/seo.html --><title>DigitalOcean 主機磁盤 Ext4 轉 XFS | 筠靈的小站</title>
+<meta name="description" content="重要：本文中的操作具有極大風險，僅供具備相關經驗的讀者參考，請勿當成手冊來操作，操作前請務必備份數據。本文作者對可能的風險以及後果不承擔任何責任。">
+
+
+  <meta name="author" content="Yunling Zhu">
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:site_name" content="筠靈的小站">
+<meta property="og:title" content="DigitalOcean 主機磁盤 Ext4 轉 XFS">
+<meta property="og:url" content="https://yunlingz.github.io/2020/09/09/ext-to-xfs-do/">
+
+
+  <meta property="og:description" content="重要：本文中的操作具有極大風險，僅供具備相關經驗的讀者參考，請勿當成手冊來操作，操作前請務必備份數據。本文作者對可能的風險以及後果不承擔任何責任。">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2020-09-09T00:00:00+08:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://yunlingz.github.io/2020/09/09/ext-to-xfs-do/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Yunling Zhu",
+      "url": "https://yunlingz.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="筠靈的小站 Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE ]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png?">
+<!-- <link rel="icon" type="image/png" href="/assets/images/favicon.png"> -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/si.png" alt=""></a>
+        
+        <a class="site-title" href="/">
+          筠靈的小站
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/tags/" >標籤</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categories/" >分類</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <svg class="icon" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15.99 16">
+            <path d="M15.5,13.12L13.19,10.8a1.69,1.69,0,0,0-1.28-.55l-0.06-.06A6.5,6.5,0,0,0,5.77,0,6.5,6.5,0,0,0,2.46,11.59a6.47,6.47,0,0,0,7.74.26l0.05,0.05a1.65,1.65,0,0,0,.5,1.24l2.38,2.38A1.68,1.68,0,0,0,15.5,13.12ZM6.4,2A4.41,4.41,0,1,1,2,6.4,4.43,4.43,0,0,1,6.4,2Z" transform="translate(-.01)"></path>
+          </svg>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">切換選單</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/avatar.jpg" alt="Yunling Zhu" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Yunling Zhu</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p><a href="/gpg">GPG</a></p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">追蹤</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+        
+          
+            <li><a href="mailto:yunling.zhu@outlook.com" rel="nofollow noopener noreferrer"><i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i> Email</a></li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/yunlingz" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="DigitalOcean 主機磁盤 Ext4 轉 XFS">
+    <meta itemprop="description" content="重要：本文中的操作具有極大風險，僅供具備相關經驗的讀者參考，請勿當成手冊來操作，操作前請務必備份數據。本文作者對可能的風險以及後果不承擔任何責任。">
+    <meta itemprop="datePublished" content="September 09, 2020">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">DigitalOcean 主機磁盤 Ext4 轉 XFS
+</h1>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-book-open"></i> 目錄</h4></header>
+              <ul class="toc__menu">
+  <li><a href="#收縮devvda1和建立臨時分區devvda3">收縮/dev/vda1和建立臨時分區/dev/vda3</a></li>
+  <li><a href="#將devvda1的文件備份到devvda3">將/dev/vda1的文件備份到/dev/vda3</a></li>
+  <li><a href="#刪除devvda3並重建和擴容devvda1">刪除/dev/vda3並重建和擴容/dev/vda1</a></li>
+  <li><a href="#修改fstab記錄-以及-修復grub">修改fstab記錄 以及 修復grub</a></li>
+  <li><a href="#為什麼建議數據服務器使用xfs而非ext4">為什麼建議數據服務器使用XFS而非ext4</a></li>
+</ul>
+            </nav>
+          </aside>
+        
+        <p><strong>重要：本文中的操作具有極大風險，僅供具備相關經驗的讀者參考，請勿當成手冊來操作，操作前請務必備份數據。本文作者對可能的風險以及後果不承擔任何責任。</strong></p>
+
+<p><strong>重要：本文中的操作具有極大風險，僅供具備相關經驗的讀者參考，請勿當成手冊來操作，操作前請務必備份數據。本文作者對可能的風險以及後果不承擔任何責任。</strong></p>
+
+<p><strong>重要：本文中的操作具有極大風險，僅供具備相關經驗的讀者參考，請勿當成手冊來操作，操作前請務必備份數據。本文作者對可能的風險以及後果不承擔任何責任。</strong></p>
+
+<p><strong>出於目前尚未知曉的原因，使用本文的思路對 Fedora 主機無法實操成功。</strong></p>
+
+<p>本文以將安裝於 ext4 上的 debian 遷移到 xfs 為例。</p>
+
+<p>利用 Recovery 進入修復模式，do 會掛載一個 debian 或 ubuntu 的 live 鏡像方便我們操作。</p>
+
+<p>進入入口在 Recovery&gt;Boot from Recovery ISO，記得在切換啟動盤前先關機。</p>
+
+<p>首先我們需要了解 Do 的虛擬主機的磁盤構成</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Disk /dev/vda: 20 GiB, 21474836480 bytes, 41943040 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 4693DC13-C1AD-40C1-91D0-627B62A55102
+
+Device     Start      End  Sectors Size Type
+/dev/vda1   6144 41943006 41936863  20G Linux filesystem
+/dev/vda2   2048     6143     4096   2M BIOS boot
+</code></pre></div></div>
+
+<p>Do 的雲主機採用 MBR 方式進行引導，/dev/vda1 就是我們日常使用的 root 分區，危險操作主要是針對它。而/dev/vda2（即 BIOS boot）分區是保留著用於讓 grub 在其中插入 core.img。這個分區通常在實踐中是必須的（但不是理論上），因為 grub 的機理為在 MBR 512 字節結束處 到 第一個分區之間的空閒空間插入 core.img，所以理論上只要中間的空閒空間足夠，不要 BIOS boot 也可以，但實踐中，這個空間一般是不夠的，所以為了空出足夠的磁盤空間來插入 core.img，需要一個大小在 1M-2M 之間的 BIOS boot 分區，即當前的/dev/vda2。</p>
+
+<p><strong>不要試著去掛載或讀取/dev/vda2</strong>，如果我們看到有針對/dev/vda2 的報錯，也千萬不要嘗試去修復/dev/vda2，直接無視掉就好了。</p>
+
+<p>對於大多數/dev/vda1 來說（除了 centos 8 虛擬主機默認是 xfs，BSD 默認是 zfs），do 通常默認的 ext4 格式。而好消息是，ext4 可以收縮，所以我們可以把/dev/vda1 裁剪到一個更小的大小，這樣就在它後面留下了空餘，在空餘處可以建立一個臨時 XFS 分區，然後把/dev/vda1 的內容複製到新分區上。</p>
+
+<h2 id="收縮devvda1和建立臨時分區devvda3">收縮<code class="language-plaintext highlighter-rouge">/dev/vda1</code>和建立臨時分區<code class="language-plaintext highlighter-rouge">/dev/vda3</code></h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>e2fsck -f /dev/vda1
+</code></pre></div></div>
+
+<p>輸出</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>e2fsck 1.44.1 (24-Mar-2018)
+Pass 1: Checking inodes, blocks, and sizes
+Pass 2: Checking directory structure
+Pass 3: Checking directory connectivity
+Pass 4: Checking reference counts
+Pass 5: Checking group summary information
+/dev/vda1: 32002/1310720 files (0.1% non-contiguous), 339149/5242107 blocks
+</code></pre></div></div>
+
+<p>不報錯就是好消息。</p>
+
+<p>然後收縮它，由於我這裡用的是一臺新創建的 VPS 來示範，所以它的內容比較小，大概只用了 2G 左右，為了保險起見，我把它收縮到 5G（原來是 20G）</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>resize2fs /dev/vda1 5G
+</code></pre></div></div>
+
+<p>輸出</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>resize2fs 1.44.1 (24-Mar-2018)
+Resizing the filesystem on /dev/vda1 to 1310720 (4k) blocks.
+The filesystem on /dev/vda1 is now 1310720 (4k) blocks long.
+</code></pre></div></div>
+
+<p>注意這一步還沒完，它的作用僅僅是把/dev/vda1 上的文件給全部集中到前 5G 的空間，而並沒有改變分區記錄，我們還需要手動利用 fdisk 操作來實現<strong>分區記錄上的收縮</strong>。</p>
+
+<p><code class="language-plaintext highlighter-rouge">fdisk /dev/vda</code>，然後打印下現有的分區，我們會看到</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Disk /dev/vda: 20 GiB, 21474836480 bytes, 41943040 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 4693DC13-C1AD-40C1-91D0-627B62A55102
+
+Device     Start      End  Sectors Size Type
+/dev/vda1   6144 41943006 41936863  20G Linux filesystem
+/dev/vda2   2048     6143     4096   2M BIOS boot
+
+Partition table entries are not in disk order.
+</code></pre></div></div>
+
+<p>果然分區記錄沒變，所以現在我們刪除分區 1，然後再建立分區 1，注意在選擇結束扇區範圍時寫<code class="language-plaintext highlighter-rouge">+6G</code>（比剛才的 5G 再大一點，為了保險）。</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Command (m for help): d
+Partition number (1,2, default 2): 1
+
+Partition 1 has been deleted.
+
+Command (m for help): n
+Partition number (1,3-128, default 1): 1
+First sector (34-41943006, default 6144):
+Last sector, +sectors or +size{K,M,G,T,P} (6144-41943006, default 41943006): +6G
+
+Created a new partition 1 of type 'Linux filesystem' and of size 6 GiB.
+Partition #1 contains a ext4 signature.
+
+Do you want to remove the signature? [Y]es/[N]o: n
+
+Command (m for help): p
+
+Disk /dev/vda: 20 GiB, 21474836480 bytes, 41943040 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 4693DC13-C1AD-40C1-91D0-627B62A55102
+
+Device     Start      End  Sectors Size Type
+/dev/vda1   6144 12589055 12582912   6G Linux filesystem
+/dev/vda2   2048     6143     4096   2M BIOS boot
+
+Partition table entries are not in disk order.
+</code></pre></div></div>
+
+<p>別急著 w，我們再在空餘出的空間上建立一個新分區<code class="language-plaintext highlighter-rouge">/dev/vda3</code>。</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Command (m for help): n
+Partition number (3-128, default 3):
+First sector (12589056-41943006, default 12589056):
+Last sector, +sectors or +size{K,M,G,T,P} (12589056-41943006, default 41943006):
+
+Created a new partition 3 of type 'Linux filesystem' and of size 14 GiB.
+
+Command (m for help): p
+Disk /dev/vda: 20 GiB, 21474836480 bytes, 41943040 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 4693DC13-C1AD-40C1-91D0-627B62A55102
+
+Device        Start      End  Sectors Size Type
+/dev/vda1      6144 12589055 12582912   6G Linux filesystem
+/dev/vda2      2048     6143     4096   2M BIOS boot
+/dev/vda3  12589056 41943006 29353951  14G Linux filesystem
+
+Partition table entries are not in disk order.
+</code></pre></div></div>
+
+<p>然後 write。</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Command (m for help): w
+The partition table has been altered.
+Calling ioctl() to re-read partition table.
+Syncing disks.
+</code></pre></div></div>
+
+<p>再檢查一下收縮後的 vda1</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>e2fsck /dev/vda1
+</code></pre></div></div>
+
+<p>應看到檢查通過，輸出類似於下面的結果</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>e2fsck 1.44.1 (24-Mar-2018)
+/dev/vda1: clean, 32002/327680 files, 276698/1310720 blocks
+</code></pre></div></div>
+
+<h2 id="將devvda1的文件備份到devvda3">將<code class="language-plaintext highlighter-rouge">/dev/vda1</code>的文件備份到<code class="language-plaintext highlighter-rouge">/dev/vda3</code></h2>
+
+<p>首先需要給 vda3 建立新的文件系統，我這裡建立的是 xfs，當然我們也可以建立其它的（比如再來一個 ext4），因為這個分區只是臨時存下文件，最後還是要刪除掉（就像編程時 swap 算法裡的臨時變量）。</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@yunlingz:~# mkfs.xfs /dev/vda3
+meta-data=/dev/vda3              isize=512    agcount=4, agsize=917311 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
+data     =                       bsize=4096   blocks=3669243, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+</code></pre></div></div>
+
+<p>然後掛載 vda1 和 vda3，並把 vda1 上的文件拷貝到 vda3</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@yunlingz:~# mkdir /mnt/old
+root@yunlingz:~# mkdir /mnt/new
+root@yunlingz:~# mount /dev/vda1 /mnt/old
+root@yunlingz:~# mount /dev/vda3 /mnt/new
+root@yunlingz:~# rsync -zahP /mnt/old/ /mnt/new/
+</code></pre></div></div>
+
+<p><strong>核心的一步：卸載 vda1 的掛載，把 vda1 重新格式化成 XFS 分區，再重新掛載，再把 vda3 上的文件重新拷貝回 vda1</strong></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@yunlingz:~# umount /dev/vda1
+root@yunlingz:~# mkfs.xfs /dev/vda1 -f
+meta-data=/dev/vda1              isize=512    agcount=4, agsize=393216 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
+data     =                       bsize=4096   blocks=1572864, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+root@yunlingz:~# mount /dev/vda1 /mnt/old/
+root@yunlingz:~# rsync -zahP /mnt/new/ /mnt/old/
+</code></pre></div></div>
+
+<h2 id="刪除devvda3並重建和擴容devvda1">刪除<code class="language-plaintext highlighter-rouge">/dev/vda3</code>並重建和擴容<code class="language-plaintext highlighter-rouge">/dev/vda1</code></h2>
+
+<p>注意下面不要卸載錯分區，要卸載的是 vda3，vda1 就讓它在/mnt/old 繼續掛著。然後我們把 vda3 格式化一下。</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@yunlingz:~# umount /mnt/new
+root@yunlingz:~# mkfs.xfs /dev/vda3 -f
+meta-data=/dev/vda3              isize=512    agcount=4, agsize=917311 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
+data     =                       bsize=4096   blocks=3669243, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+</code></pre></div></div>
+
+<p>再 fdisk 上進行兩個操作：刪除<code class="language-plaintext highlighter-rouge">/dev/vda3</code>，重建<code class="language-plaintext highlighter-rouge">/dev/vda1</code>。這次重建<code class="language-plaintext highlighter-rouge">/dev/vda1</code>時直接讓其使用盡可能大的空間（即吃掉 vda3 刪掉後空出來的部分）</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@yunlingz:~# fdisk /dev/vda
+
+Welcome to fdisk (util-linux 2.31.1).
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+
+Command (m for help): d
+Partition number (1-3, default 3): 3
+
+Partition 3 has been deleted.
+
+Command (m for help): d
+Partition number (1,2, default 2): 1
+
+Partition 1 has been deleted.
+
+Command (m for help): n
+Partition number (1,3-128, default 1): 1
+First sector (34-41943006, default 6144):
+Last sector, +sectors or +size{K,M,G,T,P} (6144-41943006, default 41943006):
+
+Created a new partition 1 of type 'Linux filesystem' and of size 20 GiB.
+Partition #1 contains a xfs signature.
+
+Do you want to remove the signature? [Y]es/[N]o: n
+
+Command (m for help): p
+
+Disk /dev/vda: 20 GiB, 21474836480 bytes, 41943040 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 4693DC13-C1AD-40C1-91D0-627B62A55102
+
+Device     Start      End  Sectors Size Type
+/dev/vda1   6144 41943006 41936863  20G Linux filesystem
+/dev/vda2   2048     6143     4096   2M BIOS boot
+
+Partition table entries are not in disk order.
+
+Command (m for help): w
+The partition table has been altered.
+Syncing disks.
+</code></pre></div></div>
+
+<p>注意，在上面的 fdisk 輸出中，/dev/vda1 看起來已經從被裁減的 6G 擴容到 20G，但是/dev/vda1 上的 xfs 文件系統結構並沒有得到重建，它目前能利用的依然只有 6G，我們可以驗證下這種說法</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@yunlingz:~# df -h /mnt/old
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda1       6.0G 1012M  5.1G  17% /mnt/old
+</code></pre></div></div>
+
+<p>要使得 xfs 文件系統能把吃掉 vda3 的空間給利用起來，需要<code class="language-plaintext highlighter-rouge">xfs_growfs</code>工具。</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@yunlingz:~# xfs_growfs /mnt/old
+meta-data=/dev/vda1              isize=512    agcount=4, agsize=393216 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+         =                       reflink=0
+data     =                       bsize=4096   blocks=1572864, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+data blocks changed from 1572864 to 5242107
+root@yunlingz:~# df -h /mnt/old
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda1        20G  1.1G   19G   6% /mnt/old
+</code></pre></div></div>
+
+<p>現在才算正常。我們還可以用 xfs_repair 來檢查下我們現在的 vda1 有沒有錯誤（注意得先卸載 vda1）（此步非必須）。</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@yunlingz:~# umount /mnt/old
+root@yunlingz:~# xfs_repair /dev/vda1
+root@yunlingz:~# mount /dev/vda1 /mnt/old
+</code></pre></div></div>
+
+<p>（記得再把 vda1 掛載回來）</p>
+
+<h2 id="修改fstab記錄-以及-修復grub">修改fstab記錄 以及 修復grub</h2>
+
+<p>首先 chroot 到原系統，然後把原先的 boot 備份一下</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>umount /dev/vda1
+mount /dev/vda1 /mnt
+mount -t proc none /mnt/proc
+mount -o bind /dev /mnt/dev
+mount -t sysfs sys /mnt/sys
+chroot /mnt/ /bin/bash
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@yunlingz:/# cd ~
+root@yunlingz:~# cp -R /boot/ ./boot_backup
+</code></pre></div></div>
+
+<p>然後修復 grub 引導</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@yunlingz:~# grub-install --target=i386-pc /dev/vda
+Installing for i386-pc platform.
+Installation finished. No error reported.
+root@yunlingz:~# grub-mkconfig -o /boot/grub/grub.cfg
+Generating grub configuration file ...
+Found linux image: /boot/vmlinuz-4.19.0-10-cloud-amd64
+Found initrd image: /boot/initrd.img-4.19.0-10-cloud-amd64
+done
+</code></pre></div></div>
+
+<p>注意現在還沒有結束，因為啟動系統時的掛載配置/etc/fstab 還寫的是原來掛載 ext4 分區的記錄，我們需要改成 xfs 的。</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@yunlingz:~# cp /etc/fstab /root/fstab.backup
+root@yunlingz:~# vim /etc/fstab
+</code></pre></div></div>
+
+<p>更改後的<code class="language-plaintext highlighter-rouge">/etc/fstab</code></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># /etc/fstab: static file system information.
+# UUID=4e8b8101-6a06-429a-aaca-0ccd7ff14aa1	/	ext4	errors=remount-ro	0	1
+
+/dev/vda1 /    xfs  defaults,noatime 0 1
+</code></pre></div></div>
+
+<p>至此全部過程結束。</p>
+
+<p><strong>現在退出，然後關機，把啟動盤從 Boot from Recovery ISO 切換回 Boot from Hard Drive，再開機，理應能直接用 ssh 連上系統了。</strong></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>❯ ssh root@xxx.xxx.xxx.xxx
+...
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+root@yunlingz:~# ls
+boot_backup  fstab.backup
+root@yunlingz:~# mount | grep vda
+/dev/vda1 on / type xfs (rw,noatime,attr2,inode64,noquota)
+</code></pre></div></div>
+
+<h2 id="為什麼建議數據服務器使用xfs而非ext4">為什麼建議數據服務器使用XFS而非ext4</h2>
+
+<p>目前 DO 的雲主機，除了 BSD 和 CentOS 8，其它的主機都默認用 ext4 做文件系統。ext4 在穩定性上不如 xfs，在數據庫如 pg 的隨機讀寫效率上也低一些。XFS 的硬盤壞了，多數時候，只要 XFS 的日誌還在，我們還能快速把硬盤搶救回來，而 ext4 的修復則更具不確定性。</p>
+
+<p>另一個誤區是：<del>日誌型數據庫保證了數據的安全，所以不需要關注 file system 的安全性。</del> 實際上：日誌型數據庫的理論安全多是建立在 file system 不出現未定義動作的前提下，而 posix 對 file system 在邊緣狀況發生後的動作多為未定義——是的，某些物理性災難發生後，file system 想怎麼做該怎麼做基本是它自己看著辦——換而言之，如果我們使用了某符合 posix 接口但可靠性極差的 fs，我們也不要指望數據庫的日誌能寫得多可靠，更不要指望數據庫的 data 有保證，即使這個數據庫使用了多麼先進的讀寫邏輯。</p>
+
+        <!-- modified begin -->
+        
+          <div style="text-align: center">
+  <small>
+    <p><b>完</b></p>
+
+    <p>
+      <img
+        width="128"
+        src="https://yunlingz.github.io/assets/images/sq.png"
+        onclick="window.open('https://yunlingz.github.io/logo_copyright', '_self')"
+      />
+    </p>
+
+    <!-- license -->
+    <!-- <h2>CC BY-SA 4.0</h2> -->
+    
+    <hr />
+
+    <p>
+      <a
+        rel="license nofollow noopener noreferrer"
+        href="http://creativecommons.org/licenses/by-sa/4.0/"
+        ><img
+          alt="CC BY-SA 4.0"
+          style="border-width: 0"
+          width="128"
+          src="https://yunlingz.github.io/assets/images/by-sa.svg"
+      /></a>
+    </p>
+
+    <p>
+      本文使用
+      <a
+        rel="license nofollow noopener noreferrer"
+        href="http://creativecommons.org/licenses/by-sa/4.0/"
+        >CC BY-SA 4.0</a
+      >
+      授權
+    </p>
+    
+  </small>
+</div>
+
+        
+        <!-- modified end -->
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> 標籤: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#2020-09" class="page__taxonomy-item" rel="tag">2020-09</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> 分類: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categories/#2020" class="page__taxonomy-item" rel="tag">2020</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> 更新時間:</strong> <time datetime="2020-09-09T00:00:00+08:00">September 09, 2020</time></p>
+        
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">分享到</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=DigitalOcean+%E4%B8%BB%E6%A9%9F%E7%A3%81%E7%9B%A4+Ext4+%E8%BD%89+XFS%20https%3A%2F%2Fyunlingz.github.io%2F2020%2F09%2F09%2Fext-to-xfs-do%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="分享到 Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fyunlingz.github.io%2F2020%2F09%2F09%2Fext-to-xfs-do%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="分享到 Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fyunlingz.github.io%2F2020%2F09%2F09%2Fext-to-xfs-do%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="分享到 LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2020/08/23/dnsmasq/" class="pagination--pager" title="如何自建 DNS 服務器
+">較舊</a>
+    
+    
+      <a href="/2020/09/22/direct-io/" class="pagination--pager" title="為什麼內核設計了 Direct I/O
+">較新</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">猜您有與趣</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2023/01/07/monad/" rel="permalink">Practically explain Monads in plain TypeScript
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">Programming by composing pure functions makes life easier, but real-world applications often depend on side effects. Functors and Monads provide ways of comp...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2021/06/06/lotr/" rel="permalink">誰是「指環王」
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">考證：託爾金書名《The Lord of the Rings》意指何人。
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2021/01/27/jemalloc/" rel="permalink">如何將 linux 默認內存分配器替換為 jemalloc
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">jemalloc 是 BSD 類系統的默認內存分配器，其在內存分配上比 glibc malloc 的實現更加高效，使用 jemalloc 能夠在一定程度上減少常駐程序的內存佔用，減輕內存碎片問題，提升動態內存使用效率。
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2021/01/27/bit-bool-array/" rel="permalink">利用位運算節省 bool 數組內存佔用
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">由於布爾值在內存中只需要一個 bit 位就可以表示和計算，而 bool 類型和 integer 類型都會佔用遠大於 1 個 bit 的空間，所以，使用 bool 或 integer 作為基礎類型來存儲布爾連續向量，是缺乏內存效率意識的設計。
+
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>追蹤:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/yunlingz" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> RSS Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright"></div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script src="https://kit.fontawesome.com/4eee35f757.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+<!-- mathjax -->
+
+
+
+  </body>
+</html>
+

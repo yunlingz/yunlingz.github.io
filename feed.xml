@@ -1,0 +1,1013 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://yunlingz.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://yunlingz.github.io/" rel="alternate" type="text/html" /><updated>2025-05-09T05:42:32+08:00</updated><id>https://yunlingz.github.io/feed.xml</id><title type="html">筠靈的小站</title><subtitle>Yunling Zhu&apos;s Pages</subtitle><author><name>Yunling Zhu</name></author><entry><title type="html">Practically explain Monads in plain TypeScript</title><link href="https://yunlingz.github.io/2023/01/07/monad/" rel="alternate" type="text/html" title="Practically explain Monads in plain TypeScript" /><published>2023-01-07T00:00:00+08:00</published><updated>2023-01-07T00:00:00+08:00</updated><id>https://yunlingz.github.io/2023/01/07/monad</id><content type="html" xml:base="https://yunlingz.github.io/2023/01/07/monad/">&lt;p&gt;Programming by composing pure functions makes life easier, but real-world applications often depend on side effects. Functors and Monads provide ways of &lt;strong&gt;composing side effects operations within pure function chaining&lt;/strong&gt;. This post provides a practical example to explain Monads in plain TypeScript.&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;readline&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;readline&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// ------------------------------------------------------&lt;/span&gt;
+
+&lt;span class=&quot;kr&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Functor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// (a -&amp;gt; b) -&amp;gt; f a -&amp;gt; f b&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;fmap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Functor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kr&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Monad&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// (a -&amp;gt; m b) -&amp;gt; m b&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;bind&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;mona&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Monad&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Monad&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;IO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;implements&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Functor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Monad&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;constructor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;effect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+
+  &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;effect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;IO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;IO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;effect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;effect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;fmap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;IO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;IO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;of&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()));&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;bind&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;mona&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;IO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;IO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;IO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;of&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;mona&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// ------------------------------------------------------&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ri&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;readline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createInterface&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;stdin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;stdout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ioLogResult&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;Promise&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kr&quot;&gt;number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;boolean&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;IO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;Promise&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;void&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;IO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;of&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;then&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(([&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tgt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;ri&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;?&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;correct&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;wrong&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;, the ans is &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tgt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ioReadNum&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;IO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;Promise&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kr&quot;&gt;number&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;IO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;of&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;Promise&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kr&quot;&gt;number&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;resolve&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;ri&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;question&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ans&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;resolve&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;parseInt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ans&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)));&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ioReadNumAndCompare&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;tgt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;string&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;IO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;Promise&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kr&quot;&gt;number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;boolean&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;ioReadNum&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;fmap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pVal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;pVal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;then&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tgt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tgt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]));&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ioRand&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;IO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;of&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;Math&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;floor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;Math&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;random&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;prompt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;guess a num between 1-3&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// ---- pure functions chained without side effects -----&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;expr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ioRand&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// IO&amp;lt;number&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;bind&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tgt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ioReadNumAndCompare&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tgt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// IO&amp;lt;Promise&amp;lt;boolean&amp;gt;&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;bind&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ioLogResult&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// IO&amp;lt;Promise&amp;lt;void&amp;gt;&amp;gt;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// expr is a pure expression without any actually IO action&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// ------------------------------------------------------&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// guess a num between 1-3&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// 3&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// correct, the ans is 3&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;expr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;finally&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;ri&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Yunling Zhu</name></author><category term="2023" /><category term="2023-01" /><summary type="html">Programming by composing pure functions makes life easier, but real-world applications often depend on side effects. Functors and Monads provide ways of composing side effects operations within pure function chaining. This post provides a practical example to explain Monads in plain TypeScript.</summary></entry><entry><title type="html">誰是「指環王」</title><link href="https://yunlingz.github.io/2021/06/06/lotr/" rel="alternate" type="text/html" title="誰是「指環王」" /><published>2021-06-06T00:00:00+08:00</published><updated>2021-06-06T00:00:00+08:00</updated><id>https://yunlingz.github.io/2021/06/06/lotr</id><content type="html" xml:base="https://yunlingz.github.io/2021/06/06/lotr/">&lt;p&gt;考證：託爾金書名《The Lord of the Rings》意指何人。&lt;/p&gt;
+
+&lt;p&gt;在原著中，佛羅多於幽谷醒來，他與甘道夫有如下一段對話：&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;`Then you knew of the Riders already-before I met them?’&lt;/p&gt;
+
+  &lt;p&gt;‘Yes, I knew of them. Indeed I spoke of them once to you; for the Black Riders are the Ringwraiths, the Nine Servants of &lt;strong&gt;the Lord of the Rings&lt;/strong&gt;. But I did not know that they had arisen again or I should have fled with you at once. I heard news of them only after I left you in June; but that story must wait. For the moment we have been saved from disaster, by Aragorn.’&lt;/p&gt;
+
+  &lt;p&gt;‘Yes,’ said Frodo, `it was Strider that saved us. Yet I was afraid of him at first. Sam never quite trusted him. I think, not at any rate until we met Glorfindel.’&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;原著明確寫道：九位戒靈是 the Lord of the Rings 的僕從。故「指環王」指魔君索倫。&lt;/p&gt;</content><author><name>Yunling Zhu</name></author><category term="2021" /><category term="2021-06" /><summary type="html">考證：託爾金書名《The Lord of the Rings》意指何人。</summary></entry><entry><title type="html">利用位運算節省 bool 數組內存佔用</title><link href="https://yunlingz.github.io/2021/01/27/bit-bool-array/" rel="alternate" type="text/html" title="利用位運算節省 bool 數組內存佔用" /><published>2021-01-27T00:00:00+08:00</published><updated>2021-01-27T00:00:00+08:00</updated><id>https://yunlingz.github.io/2021/01/27/bit-bool-array</id><content type="html" xml:base="https://yunlingz.github.io/2021/01/27/bit-bool-array/">&lt;p&gt;由於布爾值在內存中只需要一個 bit 位就可以表示和計算，而 bool 類型和 integer 類型都會佔用遠大於 1 個 bit 的空間，所以，使用 bool 或 integer 作為基礎類型來存儲布爾連續向量，是缺乏內存效率意識的設計。&lt;/p&gt;
+
+&lt;p&gt;高效的設計為：借鑑 bloom filter 的思想，利用連續的 byte 來存儲以 8 個布爾值為段的數組。這樣就能將內存使用優化為本來（假設原先使用 char 來表示單個布爾）的 1/8。&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;BitBoolArray&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+ &lt;span class=&quot;nl&quot;&gt;public:&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;explicit&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitBoolArray&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cap_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;assert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;arr_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;make_unique&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;uint8_t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cap_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;virtual&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BitBoolArray&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+  &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;assert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cap_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arr_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1u&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;assert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cap_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;arr_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1u&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;arr_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1u&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cap_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+ &lt;span class=&quot;nl&quot;&gt;private:&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cap_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unique_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;uint8_t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Yunling Zhu</name></author><category term="2021" /><category term="2021-01" /><summary type="html">由於布爾值在內存中只需要一個 bit 位就可以表示和計算，而 bool 類型和 integer 類型都會佔用遠大於 1 個 bit 的空間，所以，使用 bool 或 integer 作為基礎類型來存儲布爾連續向量，是缺乏內存效率意識的設計。</summary></entry><entry><title type="html">如何將 linux 默認內存分配器替換為 jemalloc</title><link href="https://yunlingz.github.io/2021/01/27/jemalloc/" rel="alternate" type="text/html" title="如何將 linux 默認內存分配器替換為 jemalloc" /><published>2021-01-27T00:00:00+08:00</published><updated>2021-01-27T00:00:00+08:00</updated><id>https://yunlingz.github.io/2021/01/27/jemalloc</id><content type="html" xml:base="https://yunlingz.github.io/2021/01/27/jemalloc/">&lt;p&gt;jemalloc 是 BSD 類系統的默認內存分配器，其在內存分配上比 glibc malloc 的實現更加高效，使用 jemalloc 能夠在一定程度上減少常駐程序的內存佔用，減輕內存碎片問題，提升動態內存使用效率。&lt;/p&gt;
+
+&lt;p&gt;通常，使用 jemalloc 的方法有兩種，一種是把 jemalloc 直接鏈接進程序，如 redis；另一種是利用 LD_PRELOAD 來使得 jemalloc 在程序運行時被預先動態加載，從而使得程序調用的 malloc/free 函數由 jemalloc 的動態庫提供，而非 libc。&lt;/p&gt;
+
+&lt;h2 id=&quot;方法&quot;&gt;方法&lt;/h2&gt;
+
+&lt;p&gt;不過，這兩種使用方式都不太優雅。更優雅的辦法是用 jemalloc 直接在整個系統中全局替代 glibc malloc，這樣我們既不用手動改變已有程序的運行方式（如加 LD_PRELOAD），也不用在編譯新程序時主動鏈接 jemalloc，就能讓系統中幾乎所有程序在運行時使用 jemalloc。&lt;/p&gt;
+
+&lt;p&gt;方法：編輯&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/ld.so.preload&lt;/code&gt;，將 jemalloc 的動態庫的絕對路徑寫入此文件的首行。&lt;/p&gt;
+
+&lt;p&gt;比如在 Arch 上面，jemalloc 的動態庫位於&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/usr/lib/libjemalloc.so&lt;/code&gt;，那麼把這個路徑寫入&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/ld.so.preload&lt;/code&gt;的首行即可。&lt;/p&gt;
+
+&lt;p&gt;原理：&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/ld.so.preload&lt;/code&gt;相當於作用系統全局的&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;LD_PRELOAD&lt;/code&gt;，所以我們的做法相當於讓系統中所有程序都在運行時被默認強制賦予了&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;LD_PRELOAD=/usr/lib/libjemalloc.so&lt;/code&gt;的環境變量。&lt;/p&gt;
+
+&lt;h2 id=&quot;驗證&quot;&gt;驗證&lt;/h2&gt;
+
+&lt;p&gt;更改完&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/ld.so.preload&lt;/code&gt;後，編寫一段含堆內存分配邏輯的 C 程序：&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdlib.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;malloc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;free&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EXIT_SUCCESS&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;直接編譯後運行：&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MALLOC_CONF=stats_print:true ./a.out&lt;/code&gt;，應該能看到 jemalloc 的統計報告被輸出。&lt;/p&gt;</content><author><name>Yunling Zhu</name></author><category term="2021" /><category term="2021-01" /><summary type="html">jemalloc 是 BSD 類系統的默認內存分配器，其在內存分配上比 glibc malloc 的實現更加高效，使用 jemalloc 能夠在一定程度上減少常駐程序的內存佔用，減輕內存碎片問題，提升動態內存使用效率。</summary></entry><entry><title type="html">C const 與 C++ const 的不同及常見錯誤</title><link href="https://yunlingz.github.io/2021/01/02/c-const/" rel="alternate" type="text/html" title="C const 與 C++ const 的不同及常見錯誤" /><published>2021-01-02T00:00:00+08:00</published><updated>2021-01-02T00:00:00+08:00</updated><id>https://yunlingz.github.io/2021/01/02/c-const</id><content type="html" xml:base="https://yunlingz.github.io/2021/01/02/c-const/">&lt;h2 id=&quot;const-可見性的區別&quot;&gt;const 可見性的區別&lt;/h2&gt;
+
+&lt;p&gt;對於符號的鏈接可見性：在 C 中，const 全局變量默認為 external；而在 C++中則默認為 internal。&lt;/p&gt;
+
+&lt;h3 id=&quot;c&quot;&gt;C&lt;/h3&gt;
+
+&lt;p&gt;main.c:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;extern&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;%d&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EXIT_SUCCESS&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;x.c:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gcc main.c x.c -std=gnu99 -Wall -Wextra&lt;/code&gt;可編譯成功，運行後輸出&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;1000&lt;/code&gt;。&lt;/p&gt;
+
+&lt;p&gt;原因：在 C 中，函數與全局變量的聲明默認均為外部可見，即編譯器默認將 x.c 中的&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;const int x = 1000;&lt;/code&gt;視作&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;extern const int x = 1000;&lt;/code&gt;。&lt;/p&gt;
+
+&lt;h3 id=&quot;c-1&quot;&gt;C++&lt;/h3&gt;
+
+&lt;p&gt;C++處理 const 全局變量的可見性規則與 C 相反。&lt;/p&gt;
+
+&lt;p&gt;main.cc:&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;extern&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;%d&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EXIT_SUCCESS&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;x.cc:&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;g++ main.cc x.cc -std=c++11 -pedantic -Wall -Wextra&lt;/code&gt; 編譯則會報錯：&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Undefined symbols for architecture x86_64:
+  &quot;_x&quot;, referenced from:
+      _main in ccF60bAb.o
+ld: symbol(s) not found for architecture x86_64
+collect2: error: ld returned 1 exit status
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;這是因為在 C++中，const 變量均默認為內部可見，要使得 x.cc 中的&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;const int x&lt;/code&gt;外部可見，須在其前面聲明&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;extern&lt;/code&gt;。&lt;/p&gt;
+
+&lt;p&gt;改寫 x.cc&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;extern&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;再次使用 g++編譯則成功，運行後可輸出&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;1000&lt;/code&gt;。&lt;/p&gt;
+
+&lt;h2 id=&quot;extern-引用運行時問題&quot;&gt;extern 引用運行時問題&lt;/h2&gt;
+
+&lt;p&gt;在 C/C++中，使用 extern 引用一個外部聲明的變量時，可以用非 const 的辦法引用 const 變量。&lt;/p&gt;
+
+&lt;p&gt;這不會導致編譯時錯誤，但會導致運行時錯誤。&lt;/p&gt;
+
+&lt;p&gt;main.c&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;extern&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;%d&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;%d&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EXIT_SUCCESS&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;x.c&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gcc main.c x.c -std=gnu99 -Wall -Wextra&lt;/code&gt;可編譯成功。但運行時出錯：&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;❯ ./a.out
+1000
+zsh: bus error  ./a.out
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;可惜的是，這種跨文件的引用 bug，編譯器很難檢測出來，只有在運行後才會發生奇怪的後果。所以對待全局 const 變量，一定要非常小心。&lt;/p&gt;
+
+&lt;h2 id=&quot;c89c99c-const-區別&quot;&gt;C89/{C99,C++} const 區別&lt;/h2&gt;
+
+&lt;p&gt;在 C99 和 C++中，const 關鍵字聲明的變量可以用來初始化數組長度（此節內容均不討論 vla 擴展，「數組」一詞亦不指 vla 數組）：&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdlib.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; 
+&lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; 
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kArraySiz&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arry&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kArraySiz&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EXIT_SUCCESS&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;這段代碼既是合法的 ISO C99 代碼，也是合法的 ISO C++代碼，可以嚴格編譯通過並運行成功。&lt;/p&gt;
+
+&lt;p&gt;但在 ISO C89 中，這段代碼錯誤，因為 C89 認為：const 關鍵字的作用為 標記 變量 kArraySiz 不可修改，從機理上說，是被標記為不可變的變量 kArraySiz 在運行期被初始化為 100，所以在編譯期無從得知其數值，故無法將其用於在編譯期指定數組長度。&lt;/p&gt;
+
+&lt;p&gt;這個限制儘管在語義上有一定道理，但在工程上帶來了麻煩，所以 C++移除了此限制，允許 const 變量用來初始化數組長度，後來的 C99 標準也吸納了 C++這一做法。&lt;/p&gt;
+
+&lt;p&gt;由於這種做法把 const 變量的作用給提前到編譯期，一定程度上違背了 const 的原始語義，所以 C++11 及更新標準提倡使用 constexpr 關鍵字代替 const 來表示必須在編譯期計算的表達式。但我們依然要知道這條關於 const 的例外規則，即在 C++/C99 中 const 也可以用來在編譯期初始化數組。目前大量的 C/C++代碼依然依賴這種特殊的 const 行為而非更嚴格的 constexpr，不過我們應該在新代碼裡有意多使用 constexpr。&lt;/p&gt;
+
+&lt;h2 id=&quot;const--constant&quot;&gt;const != constant&lt;/h2&gt;
+
+&lt;p&gt;在 C/C++中，const 並不如其語義上可靠，比如這種用內存地址來修改 const 量的代碼可以順利編譯：&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p_a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p_a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;%d&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;運行後，這段代碼可能會輸出&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;100&lt;/code&gt;，也可能輸出其它數字，因為這種代碼在 C 中是未定義行為，C 語言不保證此行為的後果。&lt;/p&gt;
+
+&lt;p&gt;謹記：C/C++的 const 是對&lt;strong&gt;變量&lt;/strong&gt;的不可變標記，&lt;strong&gt;不是用來聲明常量&lt;/strong&gt;的工具。真正的常量 是指在編譯期可計算出準確數值的量，即要麼是&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;#define&lt;/code&gt;式的預處理文本替換，要麼是&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;unscoped enumerator&lt;/code&gt;，要麼是&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;constexpr&lt;/code&gt;式的強制編譯期計算。&lt;/p&gt;</content><author><name>Yunling Zhu</name></author><category term="2021" /><category term="2021-01" /><summary type="html">const 可見性的區別</summary></entry><entry><title type="html">FreeBSD 桌面環境</title><link href="https://yunlingz.github.io/2020/10/06/freebsd-desktop/" rel="alternate" type="text/html" title="FreeBSD 桌面環境" /><published>2020-10-06T00:00:00+08:00</published><updated>2020-10-06T00:00:00+08:00</updated><id>https://yunlingz.github.io/2020/10/06/freebsd-desktop</id><content type="html" xml:base="https://yunlingz.github.io/2020/10/06/freebsd-desktop/">&lt;p&gt;由於打算將一臺 BSD 主機臨時用作桌面環境，決定給其裝上 XFCE。&lt;/p&gt;
+
+&lt;h2 id=&quot;安裝圖像驅動&quot;&gt;安裝圖像驅動&lt;/h2&gt;
+
+&lt;p&gt;對於 Intel 集成顯卡主機，安裝 xf86-video-intel 包：&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# pkg install xf86-video-intel
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;其他類型的顯卡可以參考：&lt;a href=&quot;https://wiki.freebsd.org/Graphics&quot;&gt;https://wiki.freebsd.org/Graphics&lt;/a&gt;和&lt;a href=&quot;https://www.freebsd.org/doc/handbook/x-config.html&quot;&gt;https://www.freebsd.org/doc/handbook/x-config.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;安裝x11&quot;&gt;安裝x11&lt;/h2&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# pkg install xorg
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;注意這一步是必須的，因為 FreeBSD 的 ports 樹裡，x11 並不是任何常見桌面環境（如 GNOME、KDE 等）的依賴。&lt;/p&gt;
+
+&lt;h2 id=&quot;安裝xfce和login-manager&quot;&gt;安裝XFCE和Login Manager&lt;/h2&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# pkg install xfce
+# pkg install x11/sddm
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;我習慣使用 SDDM 作為 Login Manager。&lt;/p&gt;
+
+&lt;h2 id=&quot;配置etcrcconf&quot;&gt;配置&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/rc.conf&lt;/code&gt;&lt;/h2&gt;
+
+&lt;p&gt;加入以下配置&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;dbus_enable=&quot;YES&quot;
+hald_enable=&quot;YES&quot;
+sddm_enable=&quot;YES&quot;
+moused_enable=&quot;YES&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;前兩行啟用了 D-Bus 與 HAL，用於進程間通信和硬件抽象；第三行啟動 sddm，使得開機時 Login Manager 能自動啟動；最後一行啟用鼠標，不然我們的鼠標在桌面中無法使用。&lt;/p&gt;
+
+&lt;h2 id=&quot;禁用beep&quot;&gt;禁用beep&lt;/h2&gt;
+
+&lt;p&gt;首先查看有哪些內核參數影響了 beep 的設定&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# sysctl -a | grep bell
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;在我的主機上，顯示的是&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kern.vt.enable_bell: 1
+hw.syscons.bell: 1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;那麼全部禁用即可，在&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/sysctl.conf&lt;/code&gt;中追加&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;hw.syscons.bell=0
+kern.vt.enable_bell=0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;然後在線更新內核參數，使得不用重啟就能禁用 beep。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# sysctl kern.vt.enable_bell=0
+# sysctl hw.syscons.bell=0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;添加一位sudoer非必須&quot;&gt;添加一位sudoer（非必須）&lt;/h2&gt;
+
+&lt;p&gt;桌面用戶有 sudo 權限會比較方便。&lt;/p&gt;
+
+&lt;p&gt;因為這臺 BSD 上已經有一個我的非 root 普通賬號，所以我的策略是安裝 sudo，然後把這個用戶加入 wheel 組，最後設置 wheel 組成員可以使用 sudo。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# pkg install sudo
+# pw group mod wheel -m yunlingz
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;然後&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;visudo&lt;/code&gt;，反註釋下面這行代碼&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;## Uncomment to allow members of group wheel to execute any command
+%wheel ALL=(ALL) ALL
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;題外話：我更偏向用&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;doas&lt;/code&gt;，它的配置更簡單，但鑑於目前&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;doas&lt;/code&gt;的使用範圍不廣，在穩定性上依然要打問號，所以我還是推薦讀者優先使用&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo&lt;/code&gt;。&lt;/p&gt;
+
+&lt;h2 id=&quot;結束&quot;&gt;結束&lt;/h2&gt;
+
+&lt;p&gt;現在&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;# reboot&lt;/code&gt;，SDDM 應該會自動啟動，登錄賬號就可以使用 XFCE 啦。&lt;/p&gt;</content><author><name>Yunling Zhu</name></author><category term="2020" /><category term="2020-10" /><summary type="html">由於打算將一臺 BSD 主機臨時用作桌面環境，決定給其裝上 XFCE。</summary></entry><entry><title type="html">使用現代 C++ 風格的 Status code</title><link href="https://yunlingz.github.io/2020/09/29/modern-cpp-error-handling/" rel="alternate" type="text/html" title="使用現代 C++ 風格的 Status code" /><published>2020-09-29T00:00:00+08:00</published><updated>2020-09-29T00:00:00+08:00</updated><id>https://yunlingz.github.io/2020/09/29/modern-cpp-error-handling</id><content type="html" xml:base="https://yunlingz.github.io/2020/09/29/modern-cpp-error-handling/">&lt;h2 id=&quot;對待-c-exceptions-的態度&quot;&gt;對待 C++ exceptions 的態度&lt;/h2&gt;
+
+&lt;p&gt;我不建議在 C++ 工程裡使用 exceptions。確實在某些例子裡，C++ exceptions 看起來很方便，但實際工程中鋪開 exceptions 不僅會讓代碼極難維護，更會由於需要照顧到內存狀態安全性而使代碼複雜度陡增（畢竟 C++ 不是 Java，沒有 GC 幫我們照顧拋出異常後的內存狀態安全）。&lt;/p&gt;
+
+&lt;p&gt;不使用 exceptions 的另一個原因是因為要為實時系統編寫代碼，拋 exceptions 無法保證硬實時性。把目光放寬的話，C++ 作為一門近裸機語言，能支持它 exceptions 特性的硬環境，其實並不多。&lt;/p&gt;
+
+&lt;h2 id=&quot;統一管理-error-code&quot;&gt;統一管理 error code&lt;/h2&gt;
+
+&lt;p&gt;既然不使用 exceptions 來彙報錯誤，那麼唯一的選擇只有錯誤碼。&lt;/p&gt;
+
+&lt;p&gt;樣例代碼&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;namespace&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;demo&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Status&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;private:&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;enum&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Code&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;kOK&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;kFileNotFound&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;kFileNotOpened&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;kInvalidArg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;kTargetLoss&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+&lt;span class=&quot;nl&quot;&gt;public:&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;virtual&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;// explicit copyable by calling `Copy()`&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Copy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;status_code_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// moveable&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+  &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;OK&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kOK&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;FileNotFound&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kFileNotFound&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;FileNotOpened&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kFileNotOpened&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;InvalidArg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kInvalidArg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TargetLoss&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kTargetLoss&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IsOK&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;status_code_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kOK&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IsFileNotFound&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;status_code_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kFileNotFound&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IsFileNotOpened&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;status_code_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kFileNotOpened&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IsInvalidArg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;status_code_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kInvalidArg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IsTargetLoss&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;status_code_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kTargetLoss&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nl&quot;&gt;private:&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;explicit&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Code&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;status_code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;status_code_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;status_code&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;Code&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;status_code_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// namespace demo&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;假如我們的項目名為 demo，現在我們需要為項目 demo 創立一個公有類&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;demo::Status&lt;/code&gt;，在 Status 內部用 enum class 來統一管理預定義錯誤碼。&lt;/p&gt;
+
+&lt;p&gt;注意我們將 Status 類的 enum class Code 和其構造函數均設置為私有，然後提供一系列靜態方法諸如&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;demo::Status::OK()&lt;/code&gt;等來生成特定種類的 Status。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;不要直接把 enum class Code 暴露到公開域來表示錯誤碼。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;我們可能會認為，直接用一個公共的&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enum Class StatusCode&lt;/code&gt;更加簡潔，或者應該把 Status 的構造函數設為公有並且去除 explicit 限制，但這樣在後續不僅會使我們寫出更多的代碼，而且由於公有 enum class 本身的不可控會帶來一系列維護難題。&lt;/p&gt;
+
+&lt;p&gt;不直接使用 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enum Class&lt;/code&gt; 的另一個理由是：儘管在上述 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Status&lt;/code&gt; 類內部只有一個類型的原子性錯誤碼 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enum class Code&lt;/code&gt;，而實際工程中，&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Status&lt;/code&gt; 類完全可以依賴多個內部 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enum class&lt;/code&gt; 來組合不同類型的錯誤碼，然後用公有函數接口表示各內部錯誤碼的組合。由此我們既&lt;strong&gt;避免了&lt;/strong&gt;以下兩種寫法：&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;在 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enum Class StatusCode&lt;/code&gt; 內部定義一堆相互依賴的複雜錯誤碼（使用本文的方法，可以用 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;class Status&lt;/code&gt; 內的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enum class CodeDisk&lt;/code&gt;、&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enum class CodeNetwork&lt;/code&gt; 的類似寫法來拆分錯誤碼依賴）。&lt;/li&gt;
+  &lt;li&gt;為了避免各錯誤碼內部邏輯依賴，而在同個項目內，不得不聲明許多類型的錯誤碼：如 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enum Class StatusCodeDisk&lt;/code&gt;、&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enum Class StatusCodeNetwork&lt;/code&gt;，但卻沒有為各錯誤碼提供統一組合接口。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;只需要在&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;include/demo/status.hh&lt;/code&gt;裡多囉嗦幾句，而其它部分的代碼都會變得易於維護。&lt;/p&gt;
+
+&lt;p&gt;另一方面，Standard Library 的預定義錯誤碼&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;std::error_code&lt;/code&gt;太過原始，並不會比我們手動實現的&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Status&lt;/code&gt;類好用。&lt;/p&gt;
+
+&lt;h2 id=&quot;使用-status-進行-error-handling&quot;&gt;使用 status 進行 error handling&lt;/h2&gt;
+
+&lt;p&gt;假如我們的 demo 項目中需要實現一個 DBClient，它能夠連接到某個數據庫並寫入數據。&lt;/p&gt;
+
+&lt;p&gt;由於本文的核心是 error handling，所以在樣例代碼裡，我們簡化 DBClient 連接到某個已存在的本地磁盤文件，並且向該已存在的文件寫入數據。&lt;/p&gt;
+
+&lt;p&gt;要求：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;該文件在磁盤上不存在時，報錯。&lt;/li&gt;
+  &lt;li&gt;該文件存在，但無法打開時，報錯。&lt;/li&gt;
+  &lt;li&gt;CLI 的參數有誤時，報錯。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Demo 本身沒有什麼應用意義，但是它的處理流程和大部分實際應用是相同的：比如我們的 client 類要能連接到某個遠程 tcp 端口，然後這個 client 要能向連接後的端口發動消息。&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;namespace&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;demo&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;DBClient&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;public:&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;optional&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DBClient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;file_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;filesystem&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exists&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;file_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nullopt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DBClient&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;file_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;k&quot;&gt;virtual&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DBClient&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// not copyable&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;DBClient&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DBClient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;DBClient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DBClient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// moveable&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;DBClient&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DBClient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;DBClient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DBClient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;WriteMsg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;filesystem&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exists&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;file_path_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FileNotFound&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;FILE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fopen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;file_path_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;a&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;of&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FileNotOpened&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;clock_now&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;chrono&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;system_clock&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;to_time_t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;chrono&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;system_clock&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;now&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;of&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;data: {}&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;time: {}&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ctime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clock_now&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;of&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;fclose&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;of&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;OK&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nl&quot;&gt;private:&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;explicit&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DBClient&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;file_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;file_path_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;file_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){};&lt;/span&gt;
+
+  &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;file_path_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// namespace demo&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Status 類的習慣用法可以類比上述代碼。&lt;/p&gt;
+
+&lt;p&gt;由於 exceptions 是構造函數唯一的報錯途徑，所以在禁用異常的前提下，為了寫出足夠安全的代碼，C++類的構造函數&lt;strong&gt;必須成功&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;p&gt;但是實際初始化過程中，正確彙報出錯往往是不可避免的需求，比如 tcp client class，一般是要使用一個地址來初始化該類，但目標地址不一定可達，這種情況下出錯與否不是類的設計者可以掌控的，由於構造函數&lt;strong&gt;必須成功&lt;/strong&gt;，所以我們將構造函數聲明為 private，然後提供靜態工廠函數，然後在工廠函數內部間接調用構造函數。&lt;/p&gt;
+
+&lt;p&gt;工廠函數，根據情況，可以返回&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;std::optional&lt;/code&gt;，這樣調用者在返回值為&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;std::nullopt&lt;/code&gt;的情況下知道其初始化失敗。也可以返回&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;std::unique_ptr&lt;/code&gt;，這樣調用者在返回值等同&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nullptr&lt;/code&gt;的情況下知道其初始化失敗。就實際應用而言，從安全的層面考慮，工廠函數只需要告訴調用者創建成功還是失敗（並做好內部資源管理工作，失敗的時候該清理的一定要清理乾淨），不需要彙報過多的信息。&lt;/p&gt;
+
+&lt;p&gt;工廠函數，比如上面代碼中的&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;demo::DBClient::Connect(...)&lt;/code&gt;，它先把可能發生錯誤的步驟全部在呼叫構造函數之前完成，如果有錯，直接 return（前提是正確釋放了資源，建議儘可能依賴 RAII），這樣就能確保在調用構造函數時，構造函數進行的只是一些例行化的簡單初始化，即確保構造函數一經調用必定正確。&lt;/p&gt;
+
+&lt;h2 id=&quot;使用示例&quot;&gt;使用示例&lt;/h2&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;namespace&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;demo&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;VaildArg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[])&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;InvalidArg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atoi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;InvalidArg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;OK&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// namespace demo&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[])&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;demo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;VaildArg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IsOK&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stderr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;usage: demo_db [db_file_path] [write_times &amp;gt; 0]&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EXIT_FAILURE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;client&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;demo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DBClient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;client&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;has_value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stderr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;failed to connect db&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EXIT_FAILURE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;demo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Status&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;OK&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;atoi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;message {}&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;client&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;WriteMsg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;c_str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IsOK&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IsFileNotFound&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stderr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;failed to find file&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EXIT_FAILURE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IsFileNotOpened&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stderr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;failed to open file&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EXIT_FAILURE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stderr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;some other error...&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EXIT_FAILURE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stdout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;write: {}&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;this_thread&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sleep_for&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;chrono&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;milliseconds&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;500&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EXIT_SUCCESS&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;合理使用現代 C++ 風格的 Status Code 並充分利用 RAII，代碼可以更易於維護。&lt;/p&gt;</content><author><name>Yunling Zhu</name></author><category term="2020" /><category term="2020-09" /><summary type="html">對待 C++ exceptions 的態度</summary></entry><entry><title type="html">為什麼內核設計了 Direct I/O</title><link href="https://yunlingz.github.io/2020/09/22/direct-io/" rel="alternate" type="text/html" title="為什麼內核設計了 Direct I/O" /><published>2020-09-22T00:00:00+08:00</published><updated>2020-09-22T00:00:00+08:00</updated><id>https://yunlingz.github.io/2020/09/22/direct-io</id><content type="html" xml:base="https://yunlingz.github.io/2020/09/22/direct-io/">&lt;p&gt;以 Linux 內核為例，默認狀態下大部分讀寫邏輯使用 Buffered I/O，所以當我們寫入某文件時，並不會直接寫入物理設備，而是寫入 kernel 的 page cache，然後返回「寫成功」。page cache 中的記錄何時寫到物理設備上由 kernel 控制，用戶空間程序看不到這一過程。&lt;/p&gt;
+
+&lt;p&gt;Buffered I/O 狀態下，當用戶空間程序讀取此文件時，kernel 會先在 page cache 中查詢，如果命中則直接返回，未命中則先從物理設備上讀取到 page cache，再從 page cache 返回結果。這個過程很像我們在開發數據應用程序時會給 postgresql 上加一層 redis 緩存，主要目的為提高讀寫效率。&lt;/p&gt;
+
+&lt;p&gt;而 Direct I/O 則會繞開 page cache，允許用戶空間程序直接讀寫物理設備。Direct I/O 之所以有重大意義，正因為 Buffered I/O 在特殊情境下無法滿足用戶空間程序的需求。&lt;/p&gt;
+
+&lt;p&gt;舉個例子，LSM-Tree 的 level 0 tree 活躍於內存上，是一個有固定最大容量限制的結構（實際上不一定是 Tree），也扮演了緩存的角色。level 0 tree 在容量達標後會與物理設備上的下一個 level 的文件進行合併。從算法的角度來看，LSM-Tree 自己在用戶空間實現了一套高效可靠的緩衝邏輯，再在中間加一層 kernel 的 Buffered I/O 不僅無法提高效率，甚至可能有反作用，於是我們便需要 Direct I/O 來繞過 page cache。&lt;/p&gt;
+
+&lt;p&gt;Direct I/O 的目的並非抹除 cache 邏輯，而是將 cache 邏輯的控制權由內核轉移到用戶空間程序。如果用戶空間程序上設計的 cache 算法低效，使用 Direct I/O 反而會大大降低 I/O 效率。&lt;/p&gt;
+
+&lt;p&gt;Direct I/O 也帶來了問題：Buffered I/O 除了自動 cache 邏輯，還有自動對齊數據，避免讀寫衝突等功能；而 Direct I/O 則沒有後兩者，由此引來吐槽：Direct I/O 的設計與 kernel 格格不入——kernel 存在的目的，就是讓用戶空間程序不要關心、不要操縱這些細節。&lt;/p&gt;
+
+&lt;p&gt;使用 Direct I/O，務必先在用戶空間對數據進行對齊，這是因為數據要想寫入物理設備，必須與扇區空間對齊。而 Buffered I/O 則會在內存空間自動幫我們做這件事。LSM-Tree 之所以適合 Direct I/O，一是因為前文提到的它的 level 0 tree 天然是個緩存結構，二是因為 LSM-Tree 各層級的 tree 的大小確定，並不需要過於複雜的邏輯就能滿足對齊需求。&lt;/p&gt;</content><author><name>Yunling Zhu</name></author><category term="2020" /><category term="2020-09" /><summary type="html">以 Linux 內核為例，默認狀態下大部分讀寫邏輯使用 Buffered I/O，所以當我們寫入某文件時，並不會直接寫入物理設備，而是寫入 kernel 的 page cache，然後返回「寫成功」。page cache 中的記錄何時寫到物理設備上由 kernel 控制，用戶空間程序看不到這一過程。</summary></entry><entry><title type="html">DigitalOcean 主機磁盤 Ext4 轉 XFS</title><link href="https://yunlingz.github.io/2020/09/09/ext-to-xfs-do/" rel="alternate" type="text/html" title="DigitalOcean 主機磁盤 Ext4 轉 XFS" /><published>2020-09-09T00:00:00+08:00</published><updated>2020-09-09T00:00:00+08:00</updated><id>https://yunlingz.github.io/2020/09/09/ext-to-xfs-do</id><content type="html" xml:base="https://yunlingz.github.io/2020/09/09/ext-to-xfs-do/">&lt;p&gt;&lt;strong&gt;重要：本文中的操作具有極大風險，僅供具備相關經驗的讀者參考，請勿當成手冊來操作，操作前請務必備份數據。本文作者對可能的風險以及後果不承擔任何責任。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;重要：本文中的操作具有極大風險，僅供具備相關經驗的讀者參考，請勿當成手冊來操作，操作前請務必備份數據。本文作者對可能的風險以及後果不承擔任何責任。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;重要：本文中的操作具有極大風險，僅供具備相關經驗的讀者參考，請勿當成手冊來操作，操作前請務必備份數據。本文作者對可能的風險以及後果不承擔任何責任。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;出於目前尚未知曉的原因，使用本文的思路對 Fedora 主機無法實操成功。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;本文以將安裝於 ext4 上的 debian 遷移到 xfs 為例。&lt;/p&gt;
+
+&lt;p&gt;利用 Recovery 進入修復模式，do 會掛載一個 debian 或 ubuntu 的 live 鏡像方便我們操作。&lt;/p&gt;
+
+&lt;p&gt;進入入口在 Recovery&amp;gt;Boot from Recovery ISO，記得在切換啟動盤前先關機。&lt;/p&gt;
+
+&lt;p&gt;首先我們需要了解 Do 的虛擬主機的磁盤構成&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Disk /dev/vda: 20 GiB, 21474836480 bytes, 41943040 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 4693DC13-C1AD-40C1-91D0-627B62A55102
+
+Device     Start      End  Sectors Size Type
+/dev/vda1   6144 41943006 41936863  20G Linux filesystem
+/dev/vda2   2048     6143     4096   2M BIOS boot
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Do 的雲主機採用 MBR 方式進行引導，/dev/vda1 就是我們日常使用的 root 分區，危險操作主要是針對它。而/dev/vda2（即 BIOS boot）分區是保留著用於讓 grub 在其中插入 core.img。這個分區通常在實踐中是必須的（但不是理論上），因為 grub 的機理為在 MBR 512 字節結束處 到 第一個分區之間的空閒空間插入 core.img，所以理論上只要中間的空閒空間足夠，不要 BIOS boot 也可以，但實踐中，這個空間一般是不夠的，所以為了空出足夠的磁盤空間來插入 core.img，需要一個大小在 1M-2M 之間的 BIOS boot 分區，即當前的/dev/vda2。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;不要試著去掛載或讀取/dev/vda2&lt;/strong&gt;，如果我們看到有針對/dev/vda2 的報錯，也千萬不要嘗試去修復/dev/vda2，直接無視掉就好了。&lt;/p&gt;
+
+&lt;p&gt;對於大多數/dev/vda1 來說（除了 centos 8 虛擬主機默認是 xfs，BSD 默認是 zfs），do 通常默認的 ext4 格式。而好消息是，ext4 可以收縮，所以我們可以把/dev/vda1 裁剪到一個更小的大小，這樣就在它後面留下了空餘，在空餘處可以建立一個臨時 XFS 分區，然後把/dev/vda1 的內容複製到新分區上。&lt;/p&gt;
+
+&lt;h2 id=&quot;收縮devvda1和建立臨時分區devvda3&quot;&gt;收縮&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/dev/vda1&lt;/code&gt;和建立臨時分區&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/dev/vda3&lt;/code&gt;&lt;/h2&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;e2fsck -f /dev/vda1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;輸出&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;e2fsck 1.44.1 (24-Mar-2018)
+Pass 1: Checking inodes, blocks, and sizes
+Pass 2: Checking directory structure
+Pass 3: Checking directory connectivity
+Pass 4: Checking reference counts
+Pass 5: Checking group summary information
+/dev/vda1: 32002/1310720 files (0.1% non-contiguous), 339149/5242107 blocks
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;不報錯就是好消息。&lt;/p&gt;
+
+&lt;p&gt;然後收縮它，由於我這裡用的是一臺新創建的 VPS 來示範，所以它的內容比較小，大概只用了 2G 左右，為了保險起見，我把它收縮到 5G（原來是 20G）&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;resize2fs /dev/vda1 5G
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;輸出&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;resize2fs 1.44.1 (24-Mar-2018)
+Resizing the filesystem on /dev/vda1 to 1310720 (4k) blocks.
+The filesystem on /dev/vda1 is now 1310720 (4k) blocks long.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;注意這一步還沒完，它的作用僅僅是把/dev/vda1 上的文件給全部集中到前 5G 的空間，而並沒有改變分區記錄，我們還需要手動利用 fdisk 操作來實現&lt;strong&gt;分區記錄上的收縮&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fdisk /dev/vda&lt;/code&gt;，然後打印下現有的分區，我們會看到&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Disk /dev/vda: 20 GiB, 21474836480 bytes, 41943040 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 4693DC13-C1AD-40C1-91D0-627B62A55102
+
+Device     Start      End  Sectors Size Type
+/dev/vda1   6144 41943006 41936863  20G Linux filesystem
+/dev/vda2   2048     6143     4096   2M BIOS boot
+
+Partition table entries are not in disk order.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;果然分區記錄沒變，所以現在我們刪除分區 1，然後再建立分區 1，注意在選擇結束扇區範圍時寫&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;+6G&lt;/code&gt;（比剛才的 5G 再大一點，為了保險）。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Command (m for help): d
+Partition number (1,2, default 2): 1
+
+Partition 1 has been deleted.
+
+Command (m for help): n
+Partition number (1,3-128, default 1): 1
+First sector (34-41943006, default 6144):
+Last sector, +sectors or +size{K,M,G,T,P} (6144-41943006, default 41943006): +6G
+
+Created a new partition 1 of type &apos;Linux filesystem&apos; and of size 6 GiB.
+Partition #1 contains a ext4 signature.
+
+Do you want to remove the signature? [Y]es/[N]o: n
+
+Command (m for help): p
+
+Disk /dev/vda: 20 GiB, 21474836480 bytes, 41943040 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 4693DC13-C1AD-40C1-91D0-627B62A55102
+
+Device     Start      End  Sectors Size Type
+/dev/vda1   6144 12589055 12582912   6G Linux filesystem
+/dev/vda2   2048     6143     4096   2M BIOS boot
+
+Partition table entries are not in disk order.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;別急著 w，我們再在空餘出的空間上建立一個新分區&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/dev/vda3&lt;/code&gt;。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Command (m for help): n
+Partition number (3-128, default 3):
+First sector (12589056-41943006, default 12589056):
+Last sector, +sectors or +size{K,M,G,T,P} (12589056-41943006, default 41943006):
+
+Created a new partition 3 of type &apos;Linux filesystem&apos; and of size 14 GiB.
+
+Command (m for help): p
+Disk /dev/vda: 20 GiB, 21474836480 bytes, 41943040 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 4693DC13-C1AD-40C1-91D0-627B62A55102
+
+Device        Start      End  Sectors Size Type
+/dev/vda1      6144 12589055 12582912   6G Linux filesystem
+/dev/vda2      2048     6143     4096   2M BIOS boot
+/dev/vda3  12589056 41943006 29353951  14G Linux filesystem
+
+Partition table entries are not in disk order.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;然後 write。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Command (m for help): w
+The partition table has been altered.
+Calling ioctl() to re-read partition table.
+Syncing disks.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;再檢查一下收縮後的 vda1&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;e2fsck /dev/vda1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;應看到檢查通過，輸出類似於下面的結果&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;e2fsck 1.44.1 (24-Mar-2018)
+/dev/vda1: clean, 32002/327680 files, 276698/1310720 blocks
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;將devvda1的文件備份到devvda3&quot;&gt;將&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/dev/vda1&lt;/code&gt;的文件備份到&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/dev/vda3&lt;/code&gt;&lt;/h2&gt;
+
+&lt;p&gt;首先需要給 vda3 建立新的文件系統，我這裡建立的是 xfs，當然我們也可以建立其它的（比如再來一個 ext4），因為這個分區只是臨時存下文件，最後還是要刪除掉（就像編程時 swap 算法裡的臨時變量）。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@yunlingz:~# mkfs.xfs /dev/vda3
+meta-data=/dev/vda3              isize=512    agcount=4, agsize=917311 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
+data     =                       bsize=4096   blocks=3669243, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;然後掛載 vda1 和 vda3，並把 vda1 上的文件拷貝到 vda3&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@yunlingz:~# mkdir /mnt/old
+root@yunlingz:~# mkdir /mnt/new
+root@yunlingz:~# mount /dev/vda1 /mnt/old
+root@yunlingz:~# mount /dev/vda3 /mnt/new
+root@yunlingz:~# rsync -zahP /mnt/old/ /mnt/new/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;核心的一步：卸載 vda1 的掛載，把 vda1 重新格式化成 XFS 分區，再重新掛載，再把 vda3 上的文件重新拷貝回 vda1&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@yunlingz:~# umount /dev/vda1
+root@yunlingz:~# mkfs.xfs /dev/vda1 -f
+meta-data=/dev/vda1              isize=512    agcount=4, agsize=393216 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
+data     =                       bsize=4096   blocks=1572864, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+root@yunlingz:~# mount /dev/vda1 /mnt/old/
+root@yunlingz:~# rsync -zahP /mnt/new/ /mnt/old/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;刪除devvda3並重建和擴容devvda1&quot;&gt;刪除&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/dev/vda3&lt;/code&gt;並重建和擴容&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/dev/vda1&lt;/code&gt;&lt;/h2&gt;
+
+&lt;p&gt;注意下面不要卸載錯分區，要卸載的是 vda3，vda1 就讓它在/mnt/old 繼續掛著。然後我們把 vda3 格式化一下。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@yunlingz:~# umount /mnt/new
+root@yunlingz:~# mkfs.xfs /dev/vda3 -f
+meta-data=/dev/vda3              isize=512    agcount=4, agsize=917311 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
+data     =                       bsize=4096   blocks=3669243, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;再 fdisk 上進行兩個操作：刪除&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/dev/vda3&lt;/code&gt;，重建&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/dev/vda1&lt;/code&gt;。這次重建&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/dev/vda1&lt;/code&gt;時直接讓其使用盡可能大的空間（即吃掉 vda3 刪掉後空出來的部分）&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@yunlingz:~# fdisk /dev/vda
+
+Welcome to fdisk (util-linux 2.31.1).
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+
+Command (m for help): d
+Partition number (1-3, default 3): 3
+
+Partition 3 has been deleted.
+
+Command (m for help): d
+Partition number (1,2, default 2): 1
+
+Partition 1 has been deleted.
+
+Command (m for help): n
+Partition number (1,3-128, default 1): 1
+First sector (34-41943006, default 6144):
+Last sector, +sectors or +size{K,M,G,T,P} (6144-41943006, default 41943006):
+
+Created a new partition 1 of type &apos;Linux filesystem&apos; and of size 20 GiB.
+Partition #1 contains a xfs signature.
+
+Do you want to remove the signature? [Y]es/[N]o: n
+
+Command (m for help): p
+
+Disk /dev/vda: 20 GiB, 21474836480 bytes, 41943040 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 4693DC13-C1AD-40C1-91D0-627B62A55102
+
+Device     Start      End  Sectors Size Type
+/dev/vda1   6144 41943006 41936863  20G Linux filesystem
+/dev/vda2   2048     6143     4096   2M BIOS boot
+
+Partition table entries are not in disk order.
+
+Command (m for help): w
+The partition table has been altered.
+Syncing disks.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;注意，在上面的 fdisk 輸出中，/dev/vda1 看起來已經從被裁減的 6G 擴容到 20G，但是/dev/vda1 上的 xfs 文件系統結構並沒有得到重建，它目前能利用的依然只有 6G，我們可以驗證下這種說法&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@yunlingz:~# df -h /mnt/old
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda1       6.0G 1012M  5.1G  17% /mnt/old
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;要使得 xfs 文件系統能把吃掉 vda3 的空間給利用起來，需要&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xfs_growfs&lt;/code&gt;工具。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@yunlingz:~# xfs_growfs /mnt/old
+meta-data=/dev/vda1              isize=512    agcount=4, agsize=393216 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+         =                       reflink=0
+data     =                       bsize=4096   blocks=1572864, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+data blocks changed from 1572864 to 5242107
+root@yunlingz:~# df -h /mnt/old
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda1        20G  1.1G   19G   6% /mnt/old
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;現在才算正常。我們還可以用 xfs_repair 來檢查下我們現在的 vda1 有沒有錯誤（注意得先卸載 vda1）（此步非必須）。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@yunlingz:~# umount /mnt/old
+root@yunlingz:~# xfs_repair /dev/vda1
+root@yunlingz:~# mount /dev/vda1 /mnt/old
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;（記得再把 vda1 掛載回來）&lt;/p&gt;
+
+&lt;h2 id=&quot;修改fstab記錄-以及-修復grub&quot;&gt;修改fstab記錄 以及 修復grub&lt;/h2&gt;
+
+&lt;p&gt;首先 chroot 到原系統，然後把原先的 boot 備份一下&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;umount /dev/vda1
+mount /dev/vda1 /mnt
+mount -t proc none /mnt/proc
+mount -o bind /dev /mnt/dev
+mount -t sysfs sys /mnt/sys
+chroot /mnt/ /bin/bash
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@yunlingz:/# cd ~
+root@yunlingz:~# cp -R /boot/ ./boot_backup
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;然後修復 grub 引導&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@yunlingz:~# grub-install --target=i386-pc /dev/vda
+Installing for i386-pc platform.
+Installation finished. No error reported.
+root@yunlingz:~# grub-mkconfig -o /boot/grub/grub.cfg
+Generating grub configuration file ...
+Found linux image: /boot/vmlinuz-4.19.0-10-cloud-amd64
+Found initrd image: /boot/initrd.img-4.19.0-10-cloud-amd64
+done
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;注意現在還沒有結束，因為啟動系統時的掛載配置/etc/fstab 還寫的是原來掛載 ext4 分區的記錄，我們需要改成 xfs 的。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@yunlingz:~# cp /etc/fstab /root/fstab.backup
+root@yunlingz:~# vim /etc/fstab
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;更改後的&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/fstab&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# /etc/fstab: static file system information.
+# UUID=4e8b8101-6a06-429a-aaca-0ccd7ff14aa1	/	ext4	errors=remount-ro	0	1
+
+/dev/vda1 /    xfs  defaults,noatime 0 1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;至此全部過程結束。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;現在退出，然後關機，把啟動盤從 Boot from Recovery ISO 切換回 Boot from Hard Drive，再開機，理應能直接用 ssh 連上系統了。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;❯ ssh root@xxx.xxx.xxx.xxx
+...
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+root@yunlingz:~# ls
+boot_backup  fstab.backup
+root@yunlingz:~# mount | grep vda
+/dev/vda1 on / type xfs (rw,noatime,attr2,inode64,noquota)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;為什麼建議數據服務器使用xfs而非ext4&quot;&gt;為什麼建議數據服務器使用XFS而非ext4&lt;/h2&gt;
+
+&lt;p&gt;目前 DO 的雲主機，除了 BSD 和 CentOS 8，其它的主機都默認用 ext4 做文件系統。ext4 在穩定性上不如 xfs，在數據庫如 pg 的隨機讀寫效率上也低一些。XFS 的硬盤壞了，多數時候，只要 XFS 的日誌還在，我們還能快速把硬盤搶救回來，而 ext4 的修復則更具不確定性。&lt;/p&gt;
+
+&lt;p&gt;另一個誤區是：&lt;del&gt;日誌型數據庫保證了數據的安全，所以不需要關注 file system 的安全性。&lt;/del&gt; 實際上：日誌型數據庫的理論安全多是建立在 file system 不出現未定義動作的前提下，而 posix 對 file system 在邊緣狀況發生後的動作多為未定義——是的，某些物理性災難發生後，file system 想怎麼做該怎麼做基本是它自己看著辦——換而言之，如果我們使用了某符合 posix 接口但可靠性極差的 fs，我們也不要指望數據庫的日誌能寫得多可靠，更不要指望數據庫的 data 有保證，即使這個數據庫使用了多麼先進的讀寫邏輯。&lt;/p&gt;</content><author><name>Yunling Zhu</name></author><category term="2020" /><category term="2020-09" /><summary type="html">重要：本文中的操作具有極大風險，僅供具備相關經驗的讀者參考，請勿當成手冊來操作，操作前請務必備份數據。本文作者對可能的風險以及後果不承擔任何責任。</summary></entry><entry><title type="html">如何自建 DNS 服務器</title><link href="https://yunlingz.github.io/2020/08/23/dnsmasq/" rel="alternate" type="text/html" title="如何自建 DNS 服務器" /><published>2020-08-23T00:00:00+08:00</published><updated>2020-08-23T00:00:00+08:00</updated><id>https://yunlingz.github.io/2020/08/23/dnsmasq</id><content type="html" xml:base="https://yunlingz.github.io/2020/08/23/dnsmasq/">&lt;p&gt;在合理網絡節點自建 DNS 服務器，可以優化域名解析速度。本文操作以 Arch Linux 為例。&lt;/p&gt;
+
+&lt;p&gt;首先安裝&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dnsmasq&lt;/code&gt;，然後備份&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dnsmasq&lt;/code&gt;的原配置文件。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo pacman -S dnsmasq
+sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.default
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;dnsmasq配置&quot;&gt;dnsmasq配置&lt;/h2&gt;
+
+&lt;p&gt;創建新的&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/dnsmasq.conf&lt;/code&gt;，編輯其內容如下&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# replace with your net interfaces
+interface=lo,eth0
+
+cache-size=2048
+strict-order
+
+no-resolv
+server=1.1.1.1
+server=1.0.0.1
+server=8.8.8.8
+server=8.8.4.4
+server=208.67.222.222
+server=208.67.220.220
+
+address=/xxx.com/127.0.0.2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;如果網絡環境依賴於某些預配置的 dns 服務器（通常能於&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/resolv.conf&lt;/code&gt;中查到），需要依照&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;server=x.x.x.x&lt;/code&gt;的格式，將他們緊接在&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;no-resolv&lt;/code&gt;下方。&lt;/p&gt;
+
+&lt;p&gt;本文自建的 DNS 服務器，不是完全意義上的 DNS，而是一個從第三方 DNS 服務商獲取記錄的緩存器。其工作原理如下，當外部用戶首次訪問此 DNS 服務器，提供 dns 查詢服務的 dnsmasq 如發現本地沒有緩存記錄，便會向&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;server&lt;/code&gt;們按順序查詢（&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;strict-order&lt;/code&gt;保證了順序不被隨機）（這裡選用三大 dns 服務商作為上游服務器），查詢到後便不再訪問後面的&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;server&lt;/code&gt;。dnsmasq 會把此結果返回給 client，然後記錄此查詢結果，並緩存於本地（緩存記錄的數量由&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cache-size&lt;/code&gt;決定）。&lt;/p&gt;
+
+&lt;p&gt;利用 dnsmasq 可為預定義域名指定地址記錄的功能，可以達成屏蔽某些域名的目的：如&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;address=/xxx.com/127.0.0.2&lt;/code&gt;使得&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xxx.com&lt;/code&gt;被解析為無效地址&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;127.0.0.2&lt;/code&gt;，則&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xxx.com&lt;/code&gt;被事實屏蔽。可以將一些常見的廣告商域名加入，以達到過濾網頁廣告的目的。&lt;/p&gt;
+
+&lt;h2 id=&quot;系統配置&quot;&gt;系統配置&lt;/h2&gt;
+
+&lt;p&gt;此步非必須。&lt;/p&gt;
+
+&lt;p&gt;如果想讓 dnsmasq 所在的服務器本身也享受到 dnsmasq 所提供的服務，則需要更改&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/resolv.conf&lt;/code&gt;。在此之前，記得先備份原配置。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo cp /etc/resolv.conf /etc/resolv.conf.default
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;然後更改&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/resolv.conf&lt;/code&gt;至如下&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nameserver 127.0.0.1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;至此本機的 dns 查詢會依照&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/resolv.conf&lt;/code&gt;的指示訪問&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;127.0.0.1:53&lt;/code&gt;，即本地 dnsmasq 服務器。這要求本地 dnsmasq 服務器不能依賴性讀取&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/resolv.conf&lt;/code&gt;，否則變成為無限套娃——故&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/dnsmasq.conf&lt;/code&gt;配置中有一句&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;no-resolv&lt;/code&gt;，正是為了避免此種情景。&lt;/p&gt;
+
+&lt;h2 id=&quot;開啟與測試&quot;&gt;開啟與測試&lt;/h2&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo systemctl enable --now dnsmasq.service
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;如果前面一步對 server 本身進行了配置，那麼使用 dig 來查詢某個域名，應該能正常返回結果，且看到&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SERVER&lt;/code&gt;顯示為&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;127.0.0.1&lt;/code&gt;。&lt;/p&gt;
+
+&lt;p&gt;在第三方測試機上將 dns 服務器設置為此服務器地址，理應能正常查詢。&lt;/p&gt;</content><author><name>Yunling Zhu</name></author><category term="2020" /><category term="2020-08" /><summary type="html">在合理網絡節點自建 DNS 服務器，可以優化域名解析速度。本文操作以 Arch Linux 為例。</summary></entry></feed>

@@ -1,0 +1,873 @@
+<!doctype html>
+
+<!--
+  「劍是兇器
+  「劍術是殺人術
+  「無論用多麼華麗的詞藻來掩飾
+  「這始終是事實」
+-->
+
+<html lang="zh" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- set color -->
+<meta name="theme-color" content="#24292e" />
+
+<style>
+  .in_memories {
+    filter: grayscale(1) !important;
+  }
+</style>
+
+<script src="https://yunlingz.github.io/assets/js/addons/jquery-3.6.1.min.js"></script>
+<script src="https://yunlingz.github.io/assets/js/addons/init.js"></script>
+
+<!-- fonts -->
+<style>
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Italic.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Italic.woff") format("woff");
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Bold.woff2") format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Bold.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-BoldItalic.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-BoldItalic.woff")
+      format("woff");
+  font-weight: bold;
+  font-style: italic;
+  font-display: swap;
+}
+
+* {
+  font-variant-ligatures: none;
+}
+
+</style>
+
+<!-- begin _includes/seo.html --><title>使用現代 C++ 風格的 Status code | 筠靈的小站</title>
+<meta name="description" content="對待 C++ exceptions 的態度">
+
+
+  <meta name="author" content="Yunling Zhu">
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:site_name" content="筠靈的小站">
+<meta property="og:title" content="使用現代 C++ 風格的 Status code">
+<meta property="og:url" content="https://yunlingz.github.io/2020/09/29/modern-cpp-error-handling/">
+
+
+  <meta property="og:description" content="對待 C++ exceptions 的態度">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2020-09-29T00:00:00+08:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://yunlingz.github.io/2020/09/29/modern-cpp-error-handling/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Yunling Zhu",
+      "url": "https://yunlingz.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="筠靈的小站 Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE ]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png?">
+<!-- <link rel="icon" type="image/png" href="/assets/images/favicon.png"> -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/si.png" alt=""></a>
+        
+        <a class="site-title" href="/">
+          筠靈的小站
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/tags/" >標籤</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categories/" >分類</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <svg class="icon" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15.99 16">
+            <path d="M15.5,13.12L13.19,10.8a1.69,1.69,0,0,0-1.28-.55l-0.06-.06A6.5,6.5,0,0,0,5.77,0,6.5,6.5,0,0,0,2.46,11.59a6.47,6.47,0,0,0,7.74.26l0.05,0.05a1.65,1.65,0,0,0,.5,1.24l2.38,2.38A1.68,1.68,0,0,0,15.5,13.12ZM6.4,2A4.41,4.41,0,1,1,2,6.4,4.43,4.43,0,0,1,6.4,2Z" transform="translate(-.01)"></path>
+          </svg>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">切換選單</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/avatar.jpg" alt="Yunling Zhu" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Yunling Zhu</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p><a href="/gpg">GPG</a></p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">追蹤</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+        
+          
+            <li><a href="mailto:yunling.zhu@outlook.com" rel="nofollow noopener noreferrer"><i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i> Email</a></li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/yunlingz" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="使用現代 C++ 風格的 Status code">
+    <meta itemprop="description" content="對待 C++ exceptions 的態度">
+    <meta itemprop="datePublished" content="September 29, 2020">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">使用現代 C++ 風格的 Status code
+</h1>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-book-open"></i> 目錄</h4></header>
+              <ul class="toc__menu">
+  <li><a href="#對待-c-exceptions-的態度">對待 C++ exceptions 的態度</a></li>
+  <li><a href="#統一管理-error-code">統一管理 error code</a></li>
+  <li><a href="#使用-status-進行-error-handling">使用 status 進行 error handling</a></li>
+  <li><a href="#使用示例">使用示例</a></li>
+</ul>
+            </nav>
+          </aside>
+        
+        <h2 id="對待-c-exceptions-的態度">對待 C++ exceptions 的態度</h2>
+
+<p>我不建議在 C++ 工程裡使用 exceptions。確實在某些例子裡，C++ exceptions 看起來很方便，但實際工程中鋪開 exceptions 不僅會讓代碼極難維護，更會由於需要照顧到內存狀態安全性而使代碼複雜度陡增（畢竟 C++ 不是 Java，沒有 GC 幫我們照顧拋出異常後的內存狀態安全）。</p>
+
+<p>不使用 exceptions 的另一個原因是因為要為實時系統編寫代碼，拋 exceptions 無法保證硬實時性。把目光放寬的話，C++ 作為一門近裸機語言，能支持它 exceptions 特性的硬環境，其實並不多。</p>
+
+<h2 id="統一管理-error-code">統一管理 error code</h2>
+
+<p>既然不使用 exceptions 來彙報錯誤，那麼唯一的選擇只有錯誤碼。</p>
+
+<p>樣例代碼</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">namespace</span> <span class="n">demo</span> <span class="p">{</span>
+
+<span class="k">class</span> <span class="nc">Status</span> <span class="p">{</span>
+<span class="nl">private:</span>
+  <span class="k">enum</span> <span class="k">class</span> <span class="nc">Code</span> <span class="p">{</span>
+    <span class="n">kOK</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">kFileNotFound</span><span class="p">,</span>
+    <span class="n">kFileNotOpened</span><span class="p">,</span>
+    <span class="n">kInvalidArg</span><span class="p">,</span>
+    <span class="n">kTargetLoss</span><span class="p">,</span>
+  <span class="p">};</span>
+
+<span class="nl">public:</span>
+  <span class="k">virtual</span> <span class="o">~</span><span class="n">Status</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+  <span class="c1">// explicit copyable by calling `Copy()`</span>
+  <span class="n">Status</span><span class="p">(</span><span class="k">const</span> <span class="n">Status</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+  <span class="n">Status</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">Status</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+  <span class="n">Status</span> <span class="n">Copy</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">Status</span><span class="p">(</span><span class="n">status_code_</span><span class="p">);</span> <span class="p">}</span>
+  <span class="c1">// moveable</span>
+  <span class="n">Status</span><span class="p">(</span><span class="n">Status</span><span class="o">&amp;&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+  <span class="n">Status</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">Status</span><span class="o">&amp;&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+  <span class="k">static</span> <span class="n">Status</span> <span class="n">OK</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">Status</span><span class="p">(</span><span class="n">Code</span><span class="o">::</span><span class="n">kOK</span><span class="p">);</span> <span class="p">}</span>
+  <span class="k">static</span> <span class="n">Status</span> <span class="n">FileNotFound</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">Status</span><span class="p">(</span><span class="n">Code</span><span class="o">::</span><span class="n">kFileNotFound</span><span class="p">);</span> <span class="p">}</span>
+  <span class="k">static</span> <span class="n">Status</span> <span class="n">FileNotOpened</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">Status</span><span class="p">(</span><span class="n">Code</span><span class="o">::</span><span class="n">kFileNotOpened</span><span class="p">);</span> <span class="p">}</span>
+  <span class="k">static</span> <span class="n">Status</span> <span class="n">InvalidArg</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">Status</span><span class="p">(</span><span class="n">Code</span><span class="o">::</span><span class="n">kInvalidArg</span><span class="p">);</span> <span class="p">}</span>
+  <span class="k">static</span> <span class="n">Status</span> <span class="n">TargetLoss</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">Status</span><span class="p">(</span><span class="n">Code</span><span class="o">::</span><span class="n">kTargetLoss</span><span class="p">);</span> <span class="p">}</span>
+
+  <span class="kt">bool</span> <span class="n">IsOK</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">status_code_</span> <span class="o">==</span> <span class="n">Code</span><span class="o">::</span><span class="n">kOK</span><span class="p">;</span> <span class="p">}</span>
+  <span class="kt">bool</span> <span class="n">IsFileNotFound</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">status_code_</span> <span class="o">==</span> <span class="n">Code</span><span class="o">::</span><span class="n">kFileNotFound</span><span class="p">;</span> <span class="p">}</span>
+  <span class="kt">bool</span> <span class="n">IsFileNotOpened</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">status_code_</span> <span class="o">==</span> <span class="n">Code</span><span class="o">::</span><span class="n">kFileNotOpened</span><span class="p">;</span> <span class="p">}</span>
+  <span class="kt">bool</span> <span class="n">IsInvalidArg</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">status_code_</span> <span class="o">==</span> <span class="n">Code</span><span class="o">::</span><span class="n">kInvalidArg</span><span class="p">;</span> <span class="p">}</span>
+  <span class="kt">bool</span> <span class="n">IsTargetLoss</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">status_code_</span> <span class="o">==</span> <span class="n">Code</span><span class="o">::</span><span class="n">kTargetLoss</span><span class="p">;</span> <span class="p">}</span>
+
+<span class="nl">private:</span>
+  <span class="k">explicit</span> <span class="n">Status</span><span class="p">(</span><span class="k">const</span> <span class="n">Code</span><span class="o">&amp;</span> <span class="n">status_code</span><span class="p">)</span> <span class="o">:</span> <span class="n">status_code_</span><span class="p">(</span><span class="n">status_code</span><span class="p">)</span> <span class="p">{}</span>
+
+  <span class="n">Code</span> <span class="n">status_code_</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="p">}</span>  <span class="c1">// namespace demo</span>
+</code></pre></div></div>
+
+<p>假如我們的項目名為 demo，現在我們需要為項目 demo 創立一個公有類<code class="language-plaintext highlighter-rouge">demo::Status</code>，在 Status 內部用 enum class 來統一管理預定義錯誤碼。</p>
+
+<p>注意我們將 Status 類的 enum class Code 和其構造函數均設置為私有，然後提供一系列靜態方法諸如<code class="language-plaintext highlighter-rouge">demo::Status::OK()</code>等來生成特定種類的 Status。</p>
+
+<p><strong>不要直接把 enum class Code 暴露到公開域來表示錯誤碼。</strong></p>
+
+<p>我們可能會認為，直接用一個公共的<code class="language-plaintext highlighter-rouge">enum Class StatusCode</code>更加簡潔，或者應該把 Status 的構造函數設為公有並且去除 explicit 限制，但這樣在後續不僅會使我們寫出更多的代碼，而且由於公有 enum class 本身的不可控會帶來一系列維護難題。</p>
+
+<p>不直接使用 <code class="language-plaintext highlighter-rouge">enum Class</code> 的另一個理由是：儘管在上述 <code class="language-plaintext highlighter-rouge">Status</code> 類內部只有一個類型的原子性錯誤碼 <code class="language-plaintext highlighter-rouge">enum class Code</code>，而實際工程中，<code class="language-plaintext highlighter-rouge">Status</code> 類完全可以依賴多個內部 <code class="language-plaintext highlighter-rouge">enum class</code> 來組合不同類型的錯誤碼，然後用公有函數接口表示各內部錯誤碼的組合。由此我們既<strong>避免了</strong>以下兩種寫法：</p>
+
+<ol>
+  <li>在 <code class="language-plaintext highlighter-rouge">enum Class StatusCode</code> 內部定義一堆相互依賴的複雜錯誤碼（使用本文的方法，可以用 <code class="language-plaintext highlighter-rouge">class Status</code> 內的 <code class="language-plaintext highlighter-rouge">enum class CodeDisk</code>、<code class="language-plaintext highlighter-rouge">enum class CodeNetwork</code> 的類似寫法來拆分錯誤碼依賴）。</li>
+  <li>為了避免各錯誤碼內部邏輯依賴，而在同個項目內，不得不聲明許多類型的錯誤碼：如 <code class="language-plaintext highlighter-rouge">enum Class StatusCodeDisk</code>、<code class="language-plaintext highlighter-rouge">enum Class StatusCodeNetwork</code>，但卻沒有為各錯誤碼提供統一組合接口。</li>
+</ol>
+
+<p>只需要在<code class="language-plaintext highlighter-rouge">include/demo/status.hh</code>裡多囉嗦幾句，而其它部分的代碼都會變得易於維護。</p>
+
+<p>另一方面，Standard Library 的預定義錯誤碼<code class="language-plaintext highlighter-rouge">std::error_code</code>太過原始，並不會比我們手動實現的<code class="language-plaintext highlighter-rouge">Status</code>類好用。</p>
+
+<h2 id="使用-status-進行-error-handling">使用 status 進行 error handling</h2>
+
+<p>假如我們的 demo 項目中需要實現一個 DBClient，它能夠連接到某個數據庫並寫入數據。</p>
+
+<p>由於本文的核心是 error handling，所以在樣例代碼裡，我們簡化 DBClient 連接到某個已存在的本地磁盤文件，並且向該已存在的文件寫入數據。</p>
+
+<p>要求：</p>
+
+<ul>
+  <li>該文件在磁盤上不存在時，報錯。</li>
+  <li>該文件存在，但無法打開時，報錯。</li>
+  <li>CLI 的參數有誤時，報錯。</li>
+</ul>
+
+<p>Demo 本身沒有什麼應用意義，但是它的處理流程和大部分實際應用是相同的：比如我們的 client 類要能連接到某個遠程 tcp 端口，然後這個 client 要能向連接後的端口發動消息。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">namespace</span> <span class="n">demo</span> <span class="p">{</span>
+
+<span class="k">class</span> <span class="nc">DBClient</span> <span class="p">{</span>
+<span class="nl">public:</span>
+  <span class="k">static</span> <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">DBClient</span><span class="o">&gt;</span> <span class="n">Connect</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">file_path</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">exists</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">DBClient</span><span class="p">(</span><span class="n">file_path</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="k">virtual</span> <span class="o">~</span><span class="n">DBClient</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+  <span class="c1">// not copyable</span>
+  <span class="n">DBClient</span><span class="p">(</span><span class="k">const</span> <span class="n">DBClient</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+  <span class="n">DBClient</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">DBClient</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+  <span class="c1">// moveable</span>
+  <span class="n">DBClient</span><span class="p">(</span><span class="n">DBClient</span><span class="o">&amp;&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+  <span class="n">DBClient</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">DBClient</span><span class="o">&amp;&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+  <span class="n">Status</span> <span class="n">WriteMsg</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">msg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">exists</span><span class="p">(</span><span class="n">file_path_</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">Status</span><span class="o">::</span><span class="n">FileNotFound</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="kt">FILE</span><span class="o">*</span> <span class="n">of</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="n">file_path_</span><span class="p">,</span> <span class="s">"a"</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">of</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">Status</span><span class="o">::</span><span class="n">FileNotOpened</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">auto</span> <span class="n">clock_now</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">system_clock</span><span class="o">::</span><span class="n">to_time_t</span><span class="p">(</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">system_clock</span><span class="o">::</span><span class="n">now</span><span class="p">());</span>
+    <span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">of</span><span class="p">,</span> <span class="s">"data: {}</span><span class="se">\t</span><span class="s">time: {}"</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">ctime</span><span class="p">(</span><span class="o">&amp;</span><span class="n">clock_now</span><span class="p">));</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">of</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">fclose</span><span class="p">(</span><span class="n">of</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">Status</span><span class="o">::</span><span class="n">OK</span><span class="p">();</span>
+  <span class="p">}</span>
+
+<span class="nl">private:</span>
+  <span class="k">explicit</span> <span class="n">DBClient</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">file_path</span><span class="p">)</span> <span class="o">:</span> <span class="n">file_path_</span><span class="p">(</span><span class="n">file_path</span><span class="p">){};</span>
+
+  <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">file_path_</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="p">}</span>  <span class="c1">// namespace demo</span>
+</code></pre></div></div>
+
+<p>Status 類的習慣用法可以類比上述代碼。</p>
+
+<p>由於 exceptions 是構造函數唯一的報錯途徑，所以在禁用異常的前提下，為了寫出足夠安全的代碼，C++類的構造函數<strong>必須成功</strong>。</p>
+
+<p>但是實際初始化過程中，正確彙報出錯往往是不可避免的需求，比如 tcp client class，一般是要使用一個地址來初始化該類，但目標地址不一定可達，這種情況下出錯與否不是類的設計者可以掌控的，由於構造函數<strong>必須成功</strong>，所以我們將構造函數聲明為 private，然後提供靜態工廠函數，然後在工廠函數內部間接調用構造函數。</p>
+
+<p>工廠函數，根據情況，可以返回<code class="language-plaintext highlighter-rouge">std::optional</code>，這樣調用者在返回值為<code class="language-plaintext highlighter-rouge">std::nullopt</code>的情況下知道其初始化失敗。也可以返回<code class="language-plaintext highlighter-rouge">std::unique_ptr</code>，這樣調用者在返回值等同<code class="language-plaintext highlighter-rouge">nullptr</code>的情況下知道其初始化失敗。就實際應用而言，從安全的層面考慮，工廠函數只需要告訴調用者創建成功還是失敗（並做好內部資源管理工作，失敗的時候該清理的一定要清理乾淨），不需要彙報過多的信息。</p>
+
+<p>工廠函數，比如上面代碼中的<code class="language-plaintext highlighter-rouge">demo::DBClient::Connect(...)</code>，它先把可能發生錯誤的步驟全部在呼叫構造函數之前完成，如果有錯，直接 return（前提是正確釋放了資源，建議儘可能依賴 RAII），這樣就能確保在調用構造函數時，構造函數進行的只是一些例行化的簡單初始化，即確保構造函數一經調用必定正確。</p>
+
+<h2 id="使用示例">使用示例</h2>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">namespace</span> <span class="n">demo</span> <span class="p">{</span>
+
+<span class="n">Status</span> <span class="n">VaildArg</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">Status</span><span class="o">::</span><span class="n">InvalidArg</span><span class="p">();</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">Status</span><span class="o">::</span><span class="n">InvalidArg</span><span class="p">();</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="n">Status</span><span class="o">::</span><span class="n">OK</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="p">}</span>  <span class="c1">// namespace demo</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">demo</span><span class="o">::</span><span class="n">VaildArg</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">).</span><span class="n">IsOK</span><span class="p">())</span> <span class="p">{</span>
+    <span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"usage: demo_db [db_file_path] [write_times &gt; 0]</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">auto</span> <span class="n">client</span> <span class="o">=</span> <span class="n">demo</span><span class="o">::</span><span class="n">DBClient</span><span class="o">::</span><span class="n">Connect</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">client</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+    <span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"failed to connect db</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">auto</span> <span class="n">s</span> <span class="o">=</span> <span class="n">demo</span><span class="o">::</span><span class="n">Status</span><span class="o">::</span><span class="n">OK</span><span class="p">();</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">::</span><span class="n">format</span><span class="p">(</span><span class="s">"message {}"</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">client</span><span class="o">-&gt;</span><span class="n">WriteMsg</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">s</span><span class="p">.</span><span class="n">IsOK</span><span class="p">())</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">IsFileNotFound</span><span class="p">())</span> <span class="p">{</span>
+        <span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"failed to find file</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+      <span class="p">}</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">IsFileNotOpened</span><span class="p">())</span> <span class="p">{</span>
+        <span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"failed to open file</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+      <span class="p">}</span>
+      <span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"some other error...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+      <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">fmt</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="s">"write: {}</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep_for</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="p">(</span><span class="mi">500</span><span class="p">));</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>合理使用現代 C++ 風格的 Status Code 並充分利用 RAII，代碼可以更易於維護。</p>
+
+        <!-- modified begin -->
+        
+          <div style="text-align: center">
+  <small>
+    <p><b>完</b></p>
+
+    <p>
+      <img
+        width="128"
+        src="https://yunlingz.github.io/assets/images/sq.png"
+        onclick="window.open('https://yunlingz.github.io/logo_copyright', '_self')"
+      />
+    </p>
+
+    <!-- license -->
+    <!-- <h2>CC BY-SA 4.0</h2> -->
+    
+    <hr />
+
+    <p>
+      <a
+        rel="license nofollow noopener noreferrer"
+        href="http://creativecommons.org/licenses/by-sa/4.0/"
+        ><img
+          alt="CC BY-SA 4.0"
+          style="border-width: 0"
+          width="128"
+          src="https://yunlingz.github.io/assets/images/by-sa.svg"
+      /></a>
+    </p>
+
+    <p>
+      本文使用
+      <a
+        rel="license nofollow noopener noreferrer"
+        href="http://creativecommons.org/licenses/by-sa/4.0/"
+        >CC BY-SA 4.0</a
+      >
+      授權
+    </p>
+    
+  </small>
+</div>
+
+        
+        <!-- modified end -->
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> 標籤: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#2020-09" class="page__taxonomy-item" rel="tag">2020-09</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> 分類: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categories/#2020" class="page__taxonomy-item" rel="tag">2020</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> 更新時間:</strong> <time datetime="2020-09-29T00:00:00+08:00">September 29, 2020</time></p>
+        
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">分享到</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=%E4%BD%BF%E7%94%A8%E7%8F%BE%E4%BB%A3+C%2B%2B+%E9%A2%A8%E6%A0%BC%E7%9A%84+Status+code%20https%3A%2F%2Fyunlingz.github.io%2F2020%2F09%2F29%2Fmodern-cpp-error-handling%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="分享到 Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fyunlingz.github.io%2F2020%2F09%2F29%2Fmodern-cpp-error-handling%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="分享到 Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fyunlingz.github.io%2F2020%2F09%2F29%2Fmodern-cpp-error-handling%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="分享到 LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2020/09/22/direct-io/" class="pagination--pager" title="為什麼內核設計了 Direct I/O
+">較舊</a>
+    
+    
+      <a href="/2020/10/06/freebsd-desktop/" class="pagination--pager" title="FreeBSD 桌面環境
+">較新</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">猜您有與趣</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2023/01/07/monad/" rel="permalink">Practically explain Monads in plain TypeScript
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">Programming by composing pure functions makes life easier, but real-world applications often depend on side effects. Functors and Monads provide ways of comp...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2021/06/06/lotr/" rel="permalink">誰是「指環王」
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">考證：託爾金書名《The Lord of the Rings》意指何人。
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2021/01/27/jemalloc/" rel="permalink">如何將 linux 默認內存分配器替換為 jemalloc
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">jemalloc 是 BSD 類系統的默認內存分配器，其在內存分配上比 glibc malloc 的實現更加高效，使用 jemalloc 能夠在一定程度上減少常駐程序的內存佔用，減輕內存碎片問題，提升動態內存使用效率。
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2021/01/27/bit-bool-array/" rel="permalink">利用位運算節省 bool 數組內存佔用
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">由於布爾值在內存中只需要一個 bit 位就可以表示和計算，而 bool 類型和 integer 類型都會佔用遠大於 1 個 bit 的空間，所以，使用 bool 或 integer 作為基礎類型來存儲布爾連續向量，是缺乏內存效率意識的設計。
+
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>追蹤:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/yunlingz" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> RSS Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright"></div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script src="https://kit.fontawesome.com/4eee35f757.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+<!-- mathjax -->
+
+
+
+  </body>
+</html>
+

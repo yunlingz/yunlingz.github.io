@@ -1,0 +1,757 @@
+<!doctype html>
+
+<!--
+  「劍是兇器
+  「劍術是殺人術
+  「無論用多麼華麗的詞藻來掩飾
+  「這始終是事實」
+-->
+
+<html lang="zh" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- set color -->
+<meta name="theme-color" content="#24292e" />
+
+<style>
+  .in_memories {
+    filter: grayscale(1) !important;
+  }
+</style>
+
+<script src="https://yunlingz.github.io/assets/js/addons/jquery-3.6.1.min.js"></script>
+<script src="https://yunlingz.github.io/assets/js/addons/init.js"></script>
+
+<!-- fonts -->
+<style>
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Italic.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Italic.woff") format("woff");
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Bold.woff2") format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Bold.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-BoldItalic.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-BoldItalic.woff")
+      format("woff");
+  font-weight: bold;
+  font-style: italic;
+  font-display: swap;
+}
+
+* {
+  font-variant-ligatures: none;
+}
+
+</style>
+
+<!-- begin _includes/seo.html --><title>Practically explain Monads in plain TypeScript | 筠靈的小站</title>
+<meta name="description" content="Programming by composing pure functions makes life easier, but real-world applications often depend on side effects. Functors and Monads provide ways of composing side effects operations within pure function chaining. This post provides a practical example to explain Monads in plain TypeScript.">
+
+
+  <meta name="author" content="Yunling Zhu">
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:site_name" content="筠靈的小站">
+<meta property="og:title" content="Practically explain Monads in plain TypeScript">
+<meta property="og:url" content="https://yunlingz.github.io/2023/01/07/monad/">
+
+
+  <meta property="og:description" content="Programming by composing pure functions makes life easier, but real-world applications often depend on side effects. Functors and Monads provide ways of composing side effects operations within pure function chaining. This post provides a practical example to explain Monads in plain TypeScript.">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2023-01-07T00:00:00+08:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://yunlingz.github.io/2023/01/07/monad/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Yunling Zhu",
+      "url": "https://yunlingz.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="筠靈的小站 Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE ]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png?">
+<!-- <link rel="icon" type="image/png" href="/assets/images/favicon.png"> -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/si.png" alt=""></a>
+        
+        <a class="site-title" href="/">
+          筠靈的小站
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/tags/" >標籤</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categories/" >分類</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <svg class="icon" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15.99 16">
+            <path d="M15.5,13.12L13.19,10.8a1.69,1.69,0,0,0-1.28-.55l-0.06-.06A6.5,6.5,0,0,0,5.77,0,6.5,6.5,0,0,0,2.46,11.59a6.47,6.47,0,0,0,7.74.26l0.05,0.05a1.65,1.65,0,0,0,.5,1.24l2.38,2.38A1.68,1.68,0,0,0,15.5,13.12ZM6.4,2A4.41,4.41,0,1,1,2,6.4,4.43,4.43,0,0,1,6.4,2Z" transform="translate(-.01)"></path>
+          </svg>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">切換選單</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/avatar.jpg" alt="Yunling Zhu" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Yunling Zhu</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p><a href="/gpg">GPG</a></p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">追蹤</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+        
+          
+            <li><a href="mailto:yunling.zhu@outlook.com" rel="nofollow noopener noreferrer"><i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i> Email</a></li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/yunlingz" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Practically explain Monads in plain TypeScript">
+    <meta itemprop="description" content="Programming by composing pure functions makes life easier, but real-world applications often depend on side effects. Functors and Monads provide ways of composing side effects operations within pure function chaining. This post provides a practical example to explain Monads in plain TypeScript.">
+    <meta itemprop="datePublished" content="January 07, 2023">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Practically explain Monads in plain TypeScript
+</h1>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-book-open"></i> 目錄</h4></header>
+              
+            </nav>
+          </aside>
+        
+        <p>Programming by composing pure functions makes life easier, but real-world applications often depend on side effects. Functors and Monads provide ways of <strong>composing side effects operations within pure function chaining</strong>. This post provides a practical example to explain Monads in plain TypeScript.</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">readline</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">readline</span><span class="dl">"</span><span class="p">;</span>
+
+<span class="c1">// ------------------------------------------------------</span>
+
+<span class="kr">interface</span> <span class="nx">Functor</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="c1">// (a -&gt; b) -&gt; f a -&gt; f b</span>
+  <span class="nx">fmap</span><span class="o">&lt;</span><span class="nx">U</span><span class="o">&gt;</span><span class="p">(</span><span class="na">func</span><span class="p">:</span> <span class="p">(</span><span class="na">val</span><span class="p">:</span> <span class="nx">T</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">U</span><span class="p">):</span> <span class="nx">Functor</span><span class="o">&lt;</span><span class="nx">U</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kr">interface</span> <span class="nx">Monad</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="c1">// (a -&gt; m b) -&gt; m b</span>
+  <span class="nx">bind</span><span class="o">&lt;</span><span class="nx">U</span><span class="o">&gt;</span><span class="p">(</span><span class="na">mona</span><span class="p">:</span> <span class="p">(</span><span class="na">val</span><span class="p">:</span> <span class="nx">T</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">Monad</span><span class="o">&lt;</span><span class="nx">U</span><span class="o">&gt;</span><span class="p">):</span> <span class="nx">Monad</span><span class="o">&lt;</span><span class="nx">U</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">class</span> <span class="nx">IO</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span> <span class="k">implements</span> <span class="nx">Functor</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span><span class="p">,</span> <span class="nx">Monad</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="k">private</span> <span class="kd">constructor</span><span class="p">(</span><span class="k">private</span> <span class="na">effect</span><span class="p">:</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">T</span><span class="p">)</span> <span class="p">{}</span>
+
+  <span class="k">static</span> <span class="k">of</span><span class="o">&lt;</span><span class="nx">V</span><span class="o">&gt;</span><span class="p">(</span><span class="na">effect</span><span class="p">:</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">V</span><span class="p">):</span> <span class="nx">IO</span><span class="o">&lt;</span><span class="nx">V</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">IO</span><span class="p">(</span><span class="nx">effect</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">run</span><span class="p">():</span> <span class="nx">T</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">effect</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="nx">fmap</span><span class="o">&lt;</span><span class="nx">U</span><span class="o">&gt;</span><span class="p">(</span><span class="na">func</span><span class="p">:</span> <span class="p">(</span><span class="na">val</span><span class="p">:</span> <span class="nx">T</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">U</span><span class="p">):</span> <span class="nx">IO</span><span class="o">&lt;</span><span class="nx">U</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">IO</span><span class="p">.</span><span class="k">of</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">func</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">run</span><span class="p">()));</span>
+  <span class="p">}</span>
+
+  <span class="nx">bind</span><span class="o">&lt;</span><span class="nx">U</span><span class="o">&gt;</span><span class="p">(</span><span class="na">mona</span><span class="p">:</span> <span class="p">(</span><span class="na">val</span><span class="p">:</span> <span class="nx">T</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">IO</span><span class="o">&lt;</span><span class="nx">U</span><span class="o">&gt;</span><span class="p">):</span> <span class="nx">IO</span><span class="o">&lt;</span><span class="nx">U</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">IO</span><span class="p">.</span><span class="k">of</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">mona</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">run</span><span class="p">()).</span><span class="nx">run</span><span class="p">());</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// ------------------------------------------------------</span>
+
+<span class="kd">const</span> <span class="nx">ri</span> <span class="o">=</span> <span class="nx">readline</span><span class="p">.</span><span class="nx">createInterface</span><span class="p">({</span>
+  <span class="na">input</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">stdin</span><span class="p">,</span>
+  <span class="na">output</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">,</span>
+<span class="p">});</span>
+
+<span class="kd">const</span> <span class="nx">ioLogResult</span> <span class="o">=</span> <span class="p">(</span><span class="nx">p</span><span class="p">:</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="p">[</span><span class="kr">number</span><span class="p">,</span> <span class="nx">boolean</span><span class="p">]</span><span class="o">&gt;</span><span class="p">):</span> <span class="nx">IO</span><span class="o">&lt;</span><span class="nb">Promise</span><span class="o">&lt;</span><span class="k">void</span><span class="o">&gt;&gt;</span> <span class="o">=&gt;</span>
+  <span class="nx">IO</span><span class="p">.</span><span class="k">of</span><span class="p">(()</span> <span class="o">=&gt;</span>
+    <span class="nx">p</span><span class="p">.</span><span class="nx">then</span><span class="p">(([</span><span class="nx">tgt</span><span class="p">,</span> <span class="nx">result</span><span class="p">])</span> <span class="o">=&gt;</span>
+      <span class="nx">ri</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">result</span> <span class="p">?</span> <span class="dl">"</span><span class="s2">correct</span><span class="dl">"</span> <span class="p">:</span> <span class="dl">"</span><span class="s2">wrong</span><span class="dl">"</span><span class="p">}</span><span class="s2">, the ans is </span><span class="p">${</span><span class="nx">tgt</span><span class="p">}</span><span class="s2">`</span><span class="p">)</span>
+    <span class="p">)</span>
+  <span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">ioReadNum</span> <span class="o">=</span> <span class="p">(</span><span class="nx">prompt</span><span class="p">:</span> <span class="kr">string</span><span class="p">):</span> <span class="nx">IO</span><span class="o">&lt;</span><span class="nb">Promise</span><span class="o">&lt;</span><span class="kr">number</span><span class="o">&gt;&gt;</span> <span class="o">=&gt;</span>
+  <span class="nx">IO</span><span class="p">.</span><span class="k">of</span><span class="p">(</span>
+    <span class="p">()</span> <span class="o">=&gt;</span>
+      <span class="k">new</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="kr">number</span><span class="o">&gt;</span><span class="p">((</span><span class="nx">resolve</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">ri</span><span class="p">.</span><span class="nx">question</span><span class="p">(</span><span class="nx">prompt</span><span class="p">,</span> <span class="p">(</span><span class="nx">ans</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">resolve</span><span class="p">(</span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">ans</span><span class="p">)));</span>
+      <span class="p">})</span>
+  <span class="p">);</span>
+<span class="kd">const</span> <span class="nx">ioReadNumAndCompare</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="nx">tgt</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span>
+  <span class="nx">prompt</span><span class="p">:</span> <span class="kr">string</span>
+<span class="p">):</span> <span class="nx">IO</span><span class="o">&lt;</span><span class="nb">Promise</span><span class="o">&lt;</span><span class="p">[</span><span class="kr">number</span><span class="p">,</span> <span class="nx">boolean</span><span class="p">]</span><span class="o">&gt;&gt;</span> <span class="o">=&gt;</span>
+  <span class="nx">ioReadNum</span><span class="p">(</span><span class="nx">prompt</span><span class="p">).</span><span class="nx">fmap</span><span class="p">((</span><span class="nx">pVal</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">pVal</span><span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">val</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="nx">tgt</span><span class="p">,</span> <span class="nx">val</span> <span class="o">===</span> <span class="nx">tgt</span><span class="p">]));</span>
+
+<span class="kd">const</span> <span class="nx">ioRand</span> <span class="o">=</span> <span class="nx">IO</span><span class="p">.</span><span class="k">of</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">prompt</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">guess a num between 1-3</span><span class="se">\n</span><span class="dl">"</span><span class="p">;</span>
+
+<span class="c1">// ---- pure functions chained without side effects -----</span>
+
+<span class="kd">const</span> <span class="nx">expr</span> <span class="o">=</span> <span class="nx">ioRand</span> <span class="c1">// IO&lt;number&gt;</span>
+  <span class="p">.</span><span class="nx">bind</span><span class="p">((</span><span class="nx">tgt</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">ioReadNumAndCompare</span><span class="p">(</span><span class="nx">tgt</span><span class="p">,</span> <span class="nx">prompt</span><span class="p">))</span> <span class="c1">// IO&lt;Promise&lt;boolean&gt;&gt;</span>
+  <span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">ioLogResult</span><span class="p">);</span> <span class="c1">// IO&lt;Promise&lt;void&gt;&gt;</span>
+
+<span class="c1">// expr is a pure expression without any actually IO action</span>
+
+<span class="c1">// ------------------------------------------------------</span>
+
+<span class="c1">// guess a num between 1-3</span>
+<span class="c1">// 3</span>
+<span class="c1">// correct, the ans is 3</span>
+<span class="nx">expr</span><span class="p">.</span><span class="nx">run</span><span class="p">().</span><span class="k">finally</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">ri</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+        <!-- modified begin -->
+        
+          <div style="text-align: center">
+  <small>
+    <p><b>完</b></p>
+
+    <p>
+      <img
+        width="128"
+        src="https://yunlingz.github.io/assets/images/sq.png"
+        onclick="window.open('https://yunlingz.github.io/logo_copyright', '_self')"
+      />
+    </p>
+
+    <!-- license -->
+    <!-- <h2>CC BY-SA 4.0</h2> -->
+    
+    <hr />
+
+    <p>
+      <a
+        rel="license nofollow noopener noreferrer"
+        href="http://creativecommons.org/licenses/by-sa/4.0/"
+        ><img
+          alt="CC BY-SA 4.0"
+          style="border-width: 0"
+          width="128"
+          src="https://yunlingz.github.io/assets/images/by-sa.svg"
+      /></a>
+    </p>
+
+    <p>
+      本文使用
+      <a
+        rel="license nofollow noopener noreferrer"
+        href="http://creativecommons.org/licenses/by-sa/4.0/"
+        >CC BY-SA 4.0</a
+      >
+      授權
+    </p>
+    
+  </small>
+</div>
+
+        
+        <!-- modified end -->
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> 標籤: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#2023-01" class="page__taxonomy-item" rel="tag">2023-01</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> 分類: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categories/#2023" class="page__taxonomy-item" rel="tag">2023</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> 更新時間:</strong> <time datetime="2023-01-07T00:00:00+08:00">January 07, 2023</time></p>
+        
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">分享到</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=Practically+explain+Monads+in+plain+TypeScript%20https%3A%2F%2Fyunlingz.github.io%2F2023%2F01%2F07%2Fmonad%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="分享到 Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fyunlingz.github.io%2F2023%2F01%2F07%2Fmonad%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="分享到 Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fyunlingz.github.io%2F2023%2F01%2F07%2Fmonad%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="分享到 LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2021/06/06/lotr/" class="pagination--pager" title="誰是「指環王」
+">較舊</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">較新</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">猜您有與趣</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2021/06/06/lotr/" rel="permalink">誰是「指環王」
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">考證：託爾金書名《The Lord of the Rings》意指何人。
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2021/01/27/jemalloc/" rel="permalink">如何將 linux 默認內存分配器替換為 jemalloc
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">jemalloc 是 BSD 類系統的默認內存分配器，其在內存分配上比 glibc malloc 的實現更加高效，使用 jemalloc 能夠在一定程度上減少常駐程序的內存佔用，減輕內存碎片問題，提升動態內存使用效率。
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2021/01/27/bit-bool-array/" rel="permalink">利用位運算節省 bool 數組內存佔用
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">由於布爾值在內存中只需要一個 bit 位就可以表示和計算，而 bool 類型和 integer 類型都會佔用遠大於 1 個 bit 的空間，所以，使用 bool 或 integer 作為基礎類型來存儲布爾連續向量，是缺乏內存效率意識的設計。
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2021/01/02/c-const/" rel="permalink">C const 與 C++ const 的不同及常見錯誤
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">const 可見性的區別
+
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>追蹤:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/yunlingz" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> RSS Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright"></div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script src="https://kit.fontawesome.com/4eee35f757.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+<!-- mathjax -->
+
+
+
+  </body>
+</html>
+

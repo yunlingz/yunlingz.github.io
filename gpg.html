@@ -1,0 +1,496 @@
+<!doctype html>
+
+<!--
+  「劍是兇器
+  「劍術是殺人術
+  「無論用多麼華麗的詞藻來掩飾
+  「這始終是事實」
+-->
+
+<html lang="zh" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- set color -->
+<meta name="theme-color" content="#24292e" />
+
+<style>
+  .in_memories {
+    filter: grayscale(1) !important;
+  }
+</style>
+
+<script src="https://yunlingz.github.io/assets/js/addons/jquery-3.6.1.min.js"></script>
+<script src="https://yunlingz.github.io/assets/js/addons/init.js"></script>
+
+<!-- fonts -->
+<style>
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Italic.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Italic.woff") format("woff");
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Bold.woff2") format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Bold.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-BoldItalic.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-BoldItalic.woff")
+      format("woff");
+  font-weight: bold;
+  font-style: italic;
+  font-display: swap;
+}
+
+* {
+  font-variant-ligatures: none;
+}
+
+</style>
+
+<!-- begin _includes/seo.html --><title>Yunling’s GPG PUBLIC KEY | 筠靈的小站</title>
+<meta name="description" content="Yunling Zhu’s Pages">
+
+
+  <meta name="author" content="Yunling Zhu">
+
+
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:site_name" content="筠靈的小站">
+<meta property="og:title" content="Yunling’s GPG PUBLIC KEY">
+<meta property="og:url" content="https://yunlingz.github.io/gpg">
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://yunlingz.github.io/gpg">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Yunling Zhu",
+      "url": "https://yunlingz.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="筠靈的小站 Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE ]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png?">
+<!-- <link rel="icon" type="image/png" href="/assets/images/favicon.png"> -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/si.png" alt=""></a>
+        
+        <a class="site-title" href="/">
+          筠靈的小站
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/tags/" >標籤</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categories/" >分類</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <svg class="icon" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15.99 16">
+            <path d="M15.5,13.12L13.19,10.8a1.69,1.69,0,0,0-1.28-.55l-0.06-.06A6.5,6.5,0,0,0,5.77,0,6.5,6.5,0,0,0,2.46,11.59a6.47,6.47,0,0,0,7.74.26l0.05,0.05a1.65,1.65,0,0,0,.5,1.24l2.38,2.38A1.68,1.68,0,0,0,15.5,13.12ZM6.4,2A4.41,4.41,0,1,1,2,6.4,4.43,4.43,0,0,1,6.4,2Z" transform="translate(-.01)"></path>
+          </svg>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">切換選單</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/avatar.jpg" alt="Yunling Zhu" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Yunling Zhu</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p><a href="/gpg">GPG</a></p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">追蹤</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+        
+          
+            <li><a href="mailto:yunling.zhu@outlook.com" rel="nofollow noopener noreferrer"><i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i> Email</a></li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/yunlingz" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Yunling’s GPG PUBLIC KEY">
+    
+    
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Yunling’s GPG PUBLIC KEY
+</h1>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <h2 id="gpg-fingerprint">GPG fingerprint</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>14E2 F697 3F92 EF7E F860  
+6705 72A4 865C 2675 A6C8
+</code></pre></div></div>
+
+<h2 id="public-key-block">PUBLIC KEY BLOCK</h2>
+
+<p><a href="https://keys.openpgp.org/vks/v1/by-fingerprint/14E2F6973F92EF7EF860670572A4865C2675A6C8">click to download</a></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+mDMEYLfHNBYJKwYBBAHaRw8BAQdAgLpDIEBeJJ2kW60QwzvMwcRnHObLbmjPne4G
+utm9/PG0JVl1bmxpbmcgWmh1IDx5dW5saW5nLnpodUBvdXRsb29rLmNvbT6IlAQT
+FgoAPBYhBBTi9pc/ku9++GBnBXKkhlwmdabIBQJhIVM+AhsDBQsJCAcCAyICAQYV
+CgkICwIEFgIDAQIeBwIXgAAKCRBypIZcJnWmyDNPAQCKJo0v/k3CgMfJQnT4uc5Q
+BCfSnPbURKwYh4XngeDiCgD+PmtgFuczk2ig8YuVMqvTtZtaU/PAhnGOdO/DC3nM
+dwu4OARgt8c0EgorBgEEAZdVAQUBAQdARiyyHD4krYp4w5S84zuhYAqwfpxNKNXE
+hIOZncGZmyEDAQgHiHgEGBYKACAWIQQU4vaXP5LvfvhgZwVypIZcJnWmyAUCYLfH
+NAIbDAAKCRBypIZcJnWmyEvaAP9NPKqVgNg78d/gJ8oPodWismSDUdwba29pWuEI
+fkQXMQEAoLBjwmkk5+kLozlclWKIk9UEPGNo1jkrKVuljEb4Wwu4MwRgt8p8Fgkr
+BgEEAdpHDwEBB0DBFfr3JPMagMIFkoc0giZfnEm6c22Vl2harnBReqw8w4jvBBgW
+CgAgFiEEFOL2lz+S7374YGcFcqSGXCZ1psgFAmC3ynwCGwIAgQkQcqSGXCZ1psh2
+IAQZFgoAHRYhBFyhvnkvYU+U2/r2yOvqUkeXJInvBQJgt8p8AAoJEOvqUkeXJInv
++jsBAMAbjfgrj5P3H6VzMx/1ZXCqhHAtC/gPdmb7cCkUxR4eAQCayJoVOrnQwi1g
+G2yi2soDGqJjzpI/gNRNkkRCrw+qDzNaAQCFDWcwDxpblH5aYtdLPo3cVee0jXz9
+hG8YIG3wDMQNggD6A52MMQk0rq9hgUsrSwY0YqKlckm+IPGNPaNERzbKzQo=
+=WmRQ
+-----END PGP PUBLIC KEY BLOCK-----
+</code></pre></div></div>
+
+        <!-- modified begin -->
+        
+        <!-- modified end -->
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+      </footer>
+
+      
+
+      
+    </div>
+
+    
+  </article>
+
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>追蹤:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/yunlingz" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> RSS Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright"></div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script src="https://kit.fontawesome.com/4eee35f757.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+<!-- mathjax -->
+
+
+
+  </body>
+</html>
+

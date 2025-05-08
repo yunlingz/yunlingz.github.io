@@ -1,0 +1,824 @@
+<!doctype html>
+
+<!--
+  「劍是兇器
+  「劍術是殺人術
+  「無論用多麼華麗的詞藻來掩飾
+  「這始終是事實」
+-->
+
+<html lang="zh" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- set color -->
+<meta name="theme-color" content="#24292e" />
+
+<style>
+  .in_memories {
+    filter: grayscale(1) !important;
+  }
+</style>
+
+<script src="https://yunlingz.github.io/assets/js/addons/jquery-3.6.1.min.js"></script>
+<script src="https://yunlingz.github.io/assets/js/addons/init.js"></script>
+
+<!-- fonts -->
+<style>
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Italic.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Italic.woff") format("woff");
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Bold.woff2") format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-Bold.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono/IBMPlexMono-BoldItalic.woff2")
+      format("woff2"),
+    url("/assets/fonts/ibm-plex-mono/IBMPlexMono-BoldItalic.woff")
+      format("woff");
+  font-weight: bold;
+  font-style: italic;
+  font-display: swap;
+}
+
+* {
+  font-variant-ligatures: none;
+}
+
+</style>
+
+<!-- begin _includes/seo.html --><title>C const 與 C++ const 的不同及常見錯誤 | 筠靈的小站</title>
+<meta name="description" content="const 可見性的區別">
+
+
+  <meta name="author" content="Yunling Zhu">
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:site_name" content="筠靈的小站">
+<meta property="og:title" content="C const 與 C++ const 的不同及常見錯誤">
+<meta property="og:url" content="https://yunlingz.github.io/2021/01/02/c-const/">
+
+
+  <meta property="og:description" content="const 可見性的區別">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2021-01-02T00:00:00+08:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://yunlingz.github.io/2021/01/02/c-const/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Yunling Zhu",
+      "url": "https://yunlingz.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="筠靈的小站 Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE ]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png?">
+<!-- <link rel="icon" type="image/png" href="/assets/images/favicon.png"> -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/si.png" alt=""></a>
+        
+        <a class="site-title" href="/">
+          筠靈的小站
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/tags/" >標籤</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categories/" >分類</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <svg class="icon" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15.99 16">
+            <path d="M15.5,13.12L13.19,10.8a1.69,1.69,0,0,0-1.28-.55l-0.06-.06A6.5,6.5,0,0,0,5.77,0,6.5,6.5,0,0,0,2.46,11.59a6.47,6.47,0,0,0,7.74.26l0.05,0.05a1.65,1.65,0,0,0,.5,1.24l2.38,2.38A1.68,1.68,0,0,0,15.5,13.12ZM6.4,2A4.41,4.41,0,1,1,2,6.4,4.43,4.43,0,0,1,6.4,2Z" transform="translate(-.01)"></path>
+          </svg>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">切換選單</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/avatar.jpg" alt="Yunling Zhu" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Yunling Zhu</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p><a href="/gpg">GPG</a></p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">追蹤</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+        
+          
+            <li><a href="mailto:yunling.zhu@outlook.com" rel="nofollow noopener noreferrer"><i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i> Email</a></li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/yunlingz" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="C const 與 C++ const 的不同及常見錯誤">
+    <meta itemprop="description" content="const 可見性的區別">
+    <meta itemprop="datePublished" content="January 02, 2021">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">C const 與 C++ const 的不同及常見錯誤
+</h1>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-book-open"></i> 目錄</h4></header>
+              <ul class="toc__menu">
+  <li><a href="#const-可見性的區別">const 可見性的區別</a>
+    <ul>
+      <li><a href="#c">C</a></li>
+      <li><a href="#c-1">C++</a></li>
+    </ul>
+  </li>
+  <li><a href="#extern-引用運行時問題">extern 引用運行時問題</a></li>
+  <li><a href="#c89c99c-const-區別">C89/{C99,C++} const 區別</a></li>
+  <li><a href="#const--constant">const != constant</a></li>
+</ul>
+            </nav>
+          </aside>
+        
+        <h2 id="const-可見性的區別">const 可見性的區別</h2>
+
+<p>對於符號的鏈接可見性：在 C 中，const 全局變量默認為 external；而在 C++中則默認為 internal。</p>
+
+<h3 id="c">C</h3>
+
+<p>main.c:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+</span>
+<span class="kt">int</span>
+<span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">extern</span> <span class="k">const</span> <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>x.c:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">gcc main.c x.c -std=gnu99 -Wall -Wextra</code>可編譯成功，運行後輸出<code class="language-plaintext highlighter-rouge">1000</code>。</p>
+
+<p>原因：在 C 中，函數與全局變量的聲明默認均為外部可見，即編譯器默認將 x.c 中的<code class="language-plaintext highlighter-rouge">const int x = 1000;</code>視作<code class="language-plaintext highlighter-rouge">extern const int x = 1000;</code>。</p>
+
+<h3 id="c-1">C++</h3>
+
+<p>C++處理 const 全局變量的可見性規則與 C 相反。</p>
+
+<p>main.cc:</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+</span>
+<span class="kt">int</span>
+<span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">extern</span> <span class="k">const</span> <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>x.cc:</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">g++ main.cc x.cc -std=c++11 -pedantic -Wall -Wextra</code> 編譯則會報錯：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Undefined symbols for architecture x86_64:
+  "_x", referenced from:
+      _main in ccF60bAb.o
+ld: symbol(s) not found for architecture x86_64
+collect2: error: ld returned 1 exit status
+</code></pre></div></div>
+
+<p>這是因為在 C++中，const 變量均默認為內部可見，要使得 x.cc 中的<code class="language-plaintext highlighter-rouge">const int x</code>外部可見，須在其前面聲明<code class="language-plaintext highlighter-rouge">extern</code>。</p>
+
+<p>改寫 x.cc</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">extern</span> <span class="k">const</span> <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>再次使用 g++編譯則成功，運行後可輸出<code class="language-plaintext highlighter-rouge">1000</code>。</p>
+
+<h2 id="extern-引用運行時問題">extern 引用運行時問題</h2>
+
+<p>在 C/C++中，使用 extern 引用一個外部聲明的變量時，可以用非 const 的辦法引用 const 變量。</p>
+
+<p>這不會導致編譯時錯誤，但會導致運行時錯誤。</p>
+
+<p>main.c</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+</span>
+<span class="kt">int</span>
+<span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">extern</span> <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span>
+  <span class="o">++</span><span class="n">x</span><span class="p">;</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>x.c</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">gcc main.c x.c -std=gnu99 -Wall -Wextra</code>可編譯成功。但運行時出錯：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>❯ ./a.out
+1000
+zsh: bus error  ./a.out
+</code></pre></div></div>
+
+<p>可惜的是，這種跨文件的引用 bug，編譯器很難檢測出來，只有在運行後才會發生奇怪的後果。所以對待全局 const 變量，一定要非常小心。</p>
+
+<h2 id="c89c99c-const-區別">C89/{C99,C++} const 區別</h2>
+
+<p>在 C99 和 C++中，const 關鍵字聲明的變量可以用來初始化數組長度（此節內容均不討論 vla 擴展，「數組」一詞亦不指 vla 數組）：</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;stdlib.h&gt;
+</span>
+<span class="kt">int</span> 
+<span class="nf">main</span><span class="p">()</span> 
+<span class="p">{</span>
+  <span class="k">const</span> <span class="kt">int</span> <span class="n">kArraySiz</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">arry</span><span class="p">[</span><span class="n">kArraySiz</span><span class="p">];</span>
+  <span class="k">return</span> <span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>這段代碼既是合法的 ISO C99 代碼，也是合法的 ISO C++代碼，可以嚴格編譯通過並運行成功。</p>
+
+<p>但在 ISO C89 中，這段代碼錯誤，因為 C89 認為：const 關鍵字的作用為 標記 變量 kArraySiz 不可修改，從機理上說，是被標記為不可變的變量 kArraySiz 在運行期被初始化為 100，所以在編譯期無從得知其數值，故無法將其用於在編譯期指定數組長度。</p>
+
+<p>這個限制儘管在語義上有一定道理，但在工程上帶來了麻煩，所以 C++移除了此限制，允許 const 變量用來初始化數組長度，後來的 C99 標準也吸納了 C++這一做法。</p>
+
+<p>由於這種做法把 const 變量的作用給提前到編譯期，一定程度上違背了 const 的原始語義，所以 C++11 及更新標準提倡使用 constexpr 關鍵字代替 const 來表示必須在編譯期計算的表達式。但我們依然要知道這條關於 const 的例外規則，即在 C++/C99 中 const 也可以用來在編譯期初始化數組。目前大量的 C/C++代碼依然依賴這種特殊的 const 行為而非更嚴格的 constexpr，不過我們應該在新代碼裡有意多使用 constexpr。</p>
+
+<h2 id="const--constant">const != constant</h2>
+
+<p>在 C/C++中，const 並不如其語義上可靠，比如這種用內存地址來修改 const 量的代碼可以順利編譯：</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="kt">int</span> <span class="o">*</span><span class="n">p_a</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">a</span><span class="p">;</span>
+<span class="o">*</span><span class="n">p_a</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">a</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>運行後，這段代碼可能會輸出<code class="language-plaintext highlighter-rouge">100</code>，也可能輸出其它數字，因為這種代碼在 C 中是未定義行為，C 語言不保證此行為的後果。</p>
+
+<p>謹記：C/C++的 const 是對<strong>變量</strong>的不可變標記，<strong>不是用來聲明常量</strong>的工具。真正的常量 是指在編譯期可計算出準確數值的量，即要麼是<code class="language-plaintext highlighter-rouge">#define</code>式的預處理文本替換，要麼是<code class="language-plaintext highlighter-rouge">unscoped enumerator</code>，要麼是<code class="language-plaintext highlighter-rouge">constexpr</code>式的強制編譯期計算。</p>
+
+        <!-- modified begin -->
+        
+          <div style="text-align: center">
+  <small>
+    <p><b>完</b></p>
+
+    <p>
+      <img
+        width="128"
+        src="https://yunlingz.github.io/assets/images/sq.png"
+        onclick="window.open('https://yunlingz.github.io/logo_copyright', '_self')"
+      />
+    </p>
+
+    <!-- license -->
+    <!-- <h2>CC BY-SA 4.0</h2> -->
+    
+    <hr />
+
+    <p>
+      <a
+        rel="license nofollow noopener noreferrer"
+        href="http://creativecommons.org/licenses/by-sa/4.0/"
+        ><img
+          alt="CC BY-SA 4.0"
+          style="border-width: 0"
+          width="128"
+          src="https://yunlingz.github.io/assets/images/by-sa.svg"
+      /></a>
+    </p>
+
+    <p>
+      本文使用
+      <a
+        rel="license nofollow noopener noreferrer"
+        href="http://creativecommons.org/licenses/by-sa/4.0/"
+        >CC BY-SA 4.0</a
+      >
+      授權
+    </p>
+    
+  </small>
+</div>
+
+        
+        <!-- modified end -->
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> 標籤: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#2021-01" class="page__taxonomy-item" rel="tag">2021-01</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> 分類: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categories/#2021" class="page__taxonomy-item" rel="tag">2021</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> 更新時間:</strong> <time datetime="2021-01-02T00:00:00+08:00">January 02, 2021</time></p>
+        
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">分享到</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=C+const+%E8%88%87+C%2B%2B+const+%E7%9A%84%E4%B8%8D%E5%90%8C%E5%8F%8A%E5%B8%B8%E8%A6%8B%E9%8C%AF%E8%AA%A4%20https%3A%2F%2Fyunlingz.github.io%2F2021%2F01%2F02%2Fc-const%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="分享到 Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fyunlingz.github.io%2F2021%2F01%2F02%2Fc-const%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="分享到 Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fyunlingz.github.io%2F2021%2F01%2F02%2Fc-const%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="分享到 LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2020/10/06/freebsd-desktop/" class="pagination--pager" title="FreeBSD 桌面環境
+">較舊</a>
+    
+    
+      <a href="/2021/01/27/bit-bool-array/" class="pagination--pager" title="利用位運算節省 bool 數組內存佔用
+">較新</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">猜您有與趣</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2023/01/07/monad/" rel="permalink">Practically explain Monads in plain TypeScript
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">Programming by composing pure functions makes life easier, but real-world applications often depend on side effects. Functors and Monads provide ways of comp...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2021/06/06/lotr/" rel="permalink">誰是「指環王」
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">考證：託爾金書名《The Lord of the Rings》意指何人。
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2021/01/27/jemalloc/" rel="permalink">如何將 linux 默認內存分配器替換為 jemalloc
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">jemalloc 是 BSD 類系統的默認內存分配器，其在內存分配上比 glibc malloc 的實現更加高效，使用 jemalloc 能夠在一定程度上減少常駐程序的內存佔用，減輕內存碎片問題，提升動態內存使用效率。
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2021/01/27/bit-bool-array/" rel="permalink">利用位運算節省 bool 數組內存佔用
+</a>
+      
+    </h2>
+    
+    <p class="archive__item-excerpt" itemprop="description">由於布爾值在內存中只需要一個 bit 位就可以表示和計算，而 bool 類型和 integer 類型都會佔用遠大於 1 個 bit 的空間，所以，使用 bool 或 integer 作為基礎類型來存儲布爾連續向量，是缺乏內存效率意識的設計。
+
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>追蹤:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/yunlingz" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> RSS Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright"></div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script src="https://kit.fontawesome.com/4eee35f757.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+<!-- mathjax -->
+
+
+
+  </body>
+</html>
+
